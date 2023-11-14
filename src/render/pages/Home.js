@@ -1,7 +1,15 @@
 import React from 'react'
+import { Navbar } from '../components/Navbar'
+import { ListPassword } from '../components/ListPassword'
+
 
 export  function Home() {
   return (
-    <div>Home</div>
+    <div>
+      <Navbar/>
+      <ListPassword/>
+    </div>
   )
 }
+
+
