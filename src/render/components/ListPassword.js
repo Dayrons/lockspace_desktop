@@ -1,7 +1,8 @@
 import React from 'react'
 import { Password } from './Password'
-
+import { useSelector } from 'react-redux'
 export  function ListPassword() {
+  const state = useSelector(state => state.app)
   return (
     <div style={{
         width:"80%",
@@ -9,7 +10,7 @@ export  function ListPassword() {
         marginTop:"20px"
     }}>
 
-        {[1,2,3,4,5,6,7,8,9,0].map(password=><Password password={password}/>)}
+        {state.passwords.map(password=><Password password={password}/>)}
     </div>
   )
 }

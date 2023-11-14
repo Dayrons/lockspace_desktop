@@ -1,10 +1,11 @@
 const { BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const { networkInterfaces } = require('os');
 const path = require('path');
+const fs = require('fs');
 const FtpSrv = require('ftp-srv');
 let window
 
-
+const root = path.join(__dirname,'../../')
 function mainWindow() {
 
     window = new BrowserWindow({
@@ -24,6 +25,8 @@ function mainWindow() {
 
 ipcMain.handle('get-hostname', getHostname)
 
+ipcMain.handle('get-file', getFile)
+
 function getHostname(e, _) {
     const nets = networkInterfaces();
     const results = Object.create(null);
@@ -40,13 +43,13 @@ function getHostname(e, _) {
             }
         }
     }
-    initFtpServer()
+    initFtpServer(e)
     return results
 }
 
-function initFtpServer() {
-    const port=2121
-    
+function initFtpServer(e) {
+    const port = 2121
+  
     const ftpServer = new FtpSrv({
         url: "ftp://0.0.0.0:" + port,
         pasv_url: '127.0.0.1',
@@ -56,18 +59,53 @@ function initFtpServer() {
 
     });
 
-    ftpServer.on('login', ({ connection, username, password }, resolve, reject) => { 
-        if(username === 'user' && password === 'password'){
-            return resolve({ root:'/home/user/Documentos/' });
-           
+    ftpServer.on('login', ({ connection, username, password }, resolve, reject) => {
+      
+        connection.on('STOR', async (error, file) => {            
+            console.log(file)
+
+         });
+
+        if (username === 'user' && password === 'password') {
+            return resolve({ root: root});
         }
         return reject(new errors.GeneralError('Invalid username or password', 401));
     });
 
-    ftpServer.listen().then(() => { 
+
+    ftpServer.on('client-error', ({ context, error }) => {
+        console.error(`FTP server error: error interfacing with client ${context} ${error} on ftp://${host}:${port} ${JSON.stringify(error)}`);
+    });
+
+    ftpServer.on('disconnect', async ({ connection, id, newConnectionCount }) => {
+        console.log("Cliente desconectado")
+        await ftpServer.close();
+    });
+
+
+
+    ftpServer.listen().then(() => {
         console.log('Ftp server is starting...')
     });
-   
+
+    
+
+}
+
+function getFile(e,_) {
+    const file = path.join(root,'password.txt')
+    const exist = fs.existsSync(file)
+
+      if(exist){
+        
+         const data = fs.readFileSync(file,"utf-8");
+         fs.unlinkSync(file)
+         return JSON.parse(data)
+
+      }
+
+      return null
+
 }
 
 

@@ -18,9 +18,9 @@ export function Password({ password }) {
             justifyContent: "space-between",
             alignItems: "center"
         }}>
-            <h3>Password</h3>
+            <h3>{password.titulo}</h3>
 
-            <CopyToClipboard text={"Copiar"}
+            <CopyToClipboard text={password.password}
                 onCopy={() => toast('Contraseña copiada')}>
                 <IconButton size='small' >
                     <IoCopy color='#2CDA9D' />
