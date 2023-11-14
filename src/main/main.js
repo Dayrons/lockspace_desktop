@@ -1,7 +1,7 @@
 const { BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const { networkInterfaces } = require('os');
 const path = require('path');
-const spawn = require('child_process').spawn
+const FtpSrv = require('ftp-srv');
 let window
 
 
@@ -45,23 +45,29 @@ function getHostname(e, _) {
 }
 
 function initFtpServer() {
+    const port=2121
+    
+    const ftpServer = new FtpSrv({
+        url: "ftp://0.0.0.0:" + port,
+        pasv_url: '127.0.0.1',
+        pasv_min: 8881,
+        whitelist: ['STOR', 'USER', 'PASS', 'TYPE', 'RETR', 'PASV', 'QUIT'],
+        anonymous: true,
+
+    });
+
+    ftpServer.on('login', ({ connection, username, password }, resolve, reject) => { 
+        if(username === 'user' && password === 'password'){
+            return resolve({ root:'/home/user/Documentos/' });
+           
+        }
+        return reject(new errors.GeneralError('Invalid username or password', 401));
+    });
+
+    ftpServer.listen().then(() => { 
+        console.log('Ftp server is starting...')
+    });
    
-    const pythonProcess = spawn('python', ['./server.py'])
-    let pythonResponse = ""
-
-
-    pythonProcess.stdout.on('data', function (data) {
-        // console.log(data.toString())
-        pythonResponse += data.toString()
-    })
-    pythonProcess.stdout.on('end', function () {
-        // console.log(pythonResponse)
-    })
-
-
-    pythonProcess.stdin.write('backendi')
-
-    pythonProcess.stdin.end()
 }
 
 
