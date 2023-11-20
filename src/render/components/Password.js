@@ -25,7 +25,7 @@ export function Password({ password }) {
             <div style={{
                 width: "100%",
                 height: "25px",
-                padding: "10px",
+                padding: "15px 10px",
                 background: "rgba(43, 46, 61,0.5)",
                 margin: "20px 0",
                 display: "flex",
@@ -49,8 +49,14 @@ export function Password({ password }) {
                         {...attributes}
                         {...listeners}
                         style={{
-                            padding: "5px 10px",
-                            cursor:"grab"
+                            display:"flex",
+                            justifyContent:"center",
+                            alignItems:"center",
+                            padding: "10px",
+                            borderRadius:"5px",
+                            cursor:"grab",
+                            marginRight:"10px",
+                            background:"rgba(28, 29, 34, 0.8)"
                         }}
                     >
                         <RiDraggable />
