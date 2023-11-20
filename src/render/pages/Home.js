@@ -25,7 +25,7 @@ export function Home() {
     }
 
     useEffect(async () => {
-        if(state.passwords.length != 0){
+        if(state.passwords != null){
             navigate('/page-password')
         }else{
             const ip = await ipcRenderer.invoke('get-hostname')
