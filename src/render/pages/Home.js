@@ -2,18 +2,18 @@ const { ipcRenderer } = require('electron')
 import { Button } from '@mui/material';
 import React, { useEffect, useState } from 'react'
 import QRCode from "react-qr-code";
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector} from 'react-redux'
 import { setPasswords } from '../context/slice/AppSlice';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 export function Home() {
+     const state = useSelector(state => state.app)
     const dispatch = useDispatch()
     const navigate = useNavigate();
     const [value, setvalue] = useState('')
 
     const getFile = async () => {
         const response = await ipcRenderer.invoke('get-file')
-        console.log(response)
         if (response != null) {
             dispatch(setPasswords(response))
             navigate('/page-password')
@@ -25,8 +25,13 @@ export function Home() {
     }
 
     useEffect(async () => {
-        const ip = await ipcRenderer.invoke('get-hostname')
-        setvalue(`${ip.eno1[0]}:2121`)
+        if(state.passwords.length != 0){
+            navigate('/page-password')
+        }else{
+            const ip = await ipcRenderer.invoke('get-hostname')
+            setvalue(`${ip.eno1[0]}:2121`)
+        }
+        
 
     }, [])
 
