@@ -29,7 +29,7 @@ export function Home() {
             navigate('/page-password')
         }else{
             const ip = await ipcRenderer.invoke('get-hostname')
-            setvalue(`${ip.eno1[0]}:2121`)
+            setvalue(`${ip.eno1[0]}`)
         }
         
 
