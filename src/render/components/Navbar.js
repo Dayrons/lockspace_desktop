@@ -1,6 +1,9 @@
 import React from 'react'
-
+import {  useDispatch } from 'react-redux'
+import { filterPasswords } from '../context/slice/AppSlice'
 export function Navbar() {
+
+  const dispatch = useDispatch()
   return (
     <div style={{
       margin: "auto",
@@ -10,12 +13,15 @@ export function Navbar() {
       marginTop:"20px"
 
     }}>
-      <input type="search" style={{
+      <input type="search" 
+      
+      onKeyUp={(e)=>{dispatch(filterPasswords(e.target.value))}}
+      style={{
         color:"white",
         height: "45px",
         width: "100%",
         boxSizing: "border-box",
-        padding: "20px 0",
+        padding: "20px",
         background:"none",
         border:"none",
         outline:"none"
