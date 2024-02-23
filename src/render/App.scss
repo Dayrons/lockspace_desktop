@@ -6,8 +6,13 @@
 body{
   background-color: #1c1d22;
   color: white;
+  overflow: hidden;
   
 }
 
 
-
+.menu-item{
+  &:hover{
+    background:#1c1d22
+  }
+}

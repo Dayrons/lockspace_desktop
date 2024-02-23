@@ -14,6 +14,8 @@ export function Home() {
 
     const getFile = async () => {
         const response = await ipcRenderer.invoke('get-file')
+
+        
         if (response != null) {
             dispatch(setPasswords(response))
             navigate('/page-password')
