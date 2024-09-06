@@ -18,11 +18,9 @@ export function Home() {
         if(state.passwords != null){
             navigate('/page-password')
         }else{
-            const ip = await ipcRenderer.invoke('get-hostname')
-            setvalue(`${ip.eno1[0]}`)
-
+            const jwt = await ipcRenderer.invoke('get-hostname')
+            setvalue(jwt)
             ipcRenderer.send('start-server')
-
         }
         
 
