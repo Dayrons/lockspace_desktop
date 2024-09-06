@@ -12,10 +12,26 @@ export function Home() {
     const navigate = useNavigate();
     const [value, setvalue] = useState('')
 
-    const getFile = async () => {
+
+
+    useEffect(async () => {
+        if(state.passwords != null){
+            navigate('/page-password')
+        }else{
+            const ip = await ipcRenderer.invoke('get-hostname')
+            setvalue(`${ip.eno1[0]}`)
+
+            ipcRenderer.send('start-server')
+
+        }
+        
+
+    }, [])
+
+    ipcRenderer.on("redirect",async (e,_)=>{
+
         const response = await ipcRenderer.invoke('get-file')
 
-        
         if (response != null) {
             dispatch(setPasswords(response))
             navigate('/page-password')
@@ -24,18 +40,7 @@ export function Home() {
             toast.error("Intenta conectar nuevamente")
         }
 
-    }
-
-    useEffect(async () => {
-        if(state.passwords != null){
-            navigate('/page-password')
-        }else{
-            const ip = await ipcRenderer.invoke('get-hostname')
-            setvalue(`${ip.eno1[0]}`)
-        }
-        
-
-    }, [])
+    })
 
     return (
         <>
@@ -59,7 +64,7 @@ export function Home() {
                     <div>
                         <h2>Escanea desde la app <span style={{ color: '#2CDA9D' }}>LockSpace</span> para cargar tus contraseñas</h2>
                     </div>
-                    <Button variant="contained" color='success' onClick={getFile} >Conectado</Button>
+                    {/* <Button variant="contained" color='success' onClick={getFile} >Conectado</Button> */}
                 </div>
                 <div style={{ width: "50%", height: "100%", background: "white", display: "flex", justifyContent: "center", alignItems: "center" }}>
                     <QRCode value={value} />

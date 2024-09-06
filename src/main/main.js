@@ -25,6 +25,10 @@ function mainWindow() {
 
 ipcMain.handle('get-hostname', getHostname)
 
+// ipcMain.handle('start-server', initFtpServer)
+
+ipcMain.on('start-server', initFtpServer)
+
 ipcMain.handle('get-file', getFile)
 
 function getHostname(e, _) {
@@ -43,11 +47,11 @@ function getHostname(e, _) {
             }
         }
     }
-    initFtpServer(e)
+    // initFtpServer(e)
     return results
 }
 
-function initFtpServer(e) {
+function initFtpServer(e,_) {
     const port = 2121
   
     const ftpServer = new FtpSrv({
@@ -62,8 +66,8 @@ function initFtpServer(e) {
     ftpServer.on('login', ({ connection, username, password }, resolve, reject) => {
       
         connection.on('STOR', async (error, file) => {            
-            console.log(file)
-
+            console.log(`FILE ${file}`)
+            window.webContents.send('redirect')
          });
 
         if (username === 'user' && password === 'password') {
