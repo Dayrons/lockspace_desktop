@@ -1,10 +1,12 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit'
 import AppReducer from './slice/AppSlice'
+import MenuItemsReducer from './slice/MenuItemsSlice'
 
 
 
 const rootReducer = combineReducers({
-	app:AppReducer
+	app:AppReducer,
+	menuItems:MenuItemsReducer
 })
 
 

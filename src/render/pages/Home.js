@@ -65,7 +65,11 @@ export function Home() {
                     {/* <Button variant="contained" color='success' onClick={getFile} >Conectado</Button> */}
                 </div>
                 <div style={{ width: "50%", height: "100%", background: "white", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                    <QRCode value={value} />
+
+                    {
+                        value == ""?<></>:<QRCode value={value} />
+                    }
+                    
                 </div>
 
             </div>

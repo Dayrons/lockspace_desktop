@@ -8,6 +8,8 @@ const CryptoJS = require("crypto-js");
 
 let window;
 
+let macAddress;
+
 const root = path.join(__dirname, "../../");
 function mainWindow() {
   window = new BrowserWindow({
@@ -46,12 +48,30 @@ function getHostname(e, _) {
     }
   }
 
-  // la contrase;a con la que se encodea las contrase;a en el movil es con lo que se pasara los datos del usuario encodeado
-  const macAddress = networkInterfaces().eno1[0].mac;
 
-  const userEncrypt = CryptoJS.AES.encrypt(macAddress, "1234").toString();
+   macAddress = networkInterfaces().eno1[0].mac;
 
-  const data = { username: userEncrypt, password: "password", ip: host.eno1[0] };
+
+
+  const key = CryptoJS.enc.Utf8.parse("secretkey:hapilyeverafter1234567"); 
+
+  // El problema es que el iv es diferente en flutter crea encriptado diferente
+  const iv = CryptoJS.lib.WordArray.random(16); 
+
+  const userEncrypt = CryptoJS.AES.encrypt(macAddress, key, { iv: iv });
+  const decrypted = CryptoJS.AES.decrypt(userEncrypt, key, { iv: iv });
+
+  console.log(decrypted.toString(CryptoJS.enc.Utf8)); 
+  console.log(userEncrypt.toString());
+   
+
+  
+
+  const data = {
+    username:macAddress,
+    password: "password",
+    host: host.eno1[0],
+  };
 
   const secretKey = "1234";
 
@@ -79,7 +99,7 @@ function initFtpServer(e, _) {
         window.webContents.send("redirect");
       });
 
-      if (username === "user" && password === "password") {
+      if (username === macAddress && password === "password") {
         return resolve({ root: root });
       }
       return reject(

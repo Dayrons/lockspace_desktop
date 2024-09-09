@@ -44,6 +44,8 @@
     "crypto-js": "^4.2.0",
     "electron": "^13.2.3",
     "electron-reload": "^2.0.0-alpha.1",
+    "fernet": "^0.3.2",
+    "fernet-nodejs": "^1.0.6",
     "ftp-srv": "^4.6.3",
     "html-pdf": "^3.0.1",
     "js-file-download": "^0.4.12",

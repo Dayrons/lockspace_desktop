@@ -1,11 +1,17 @@
 import React from 'react'
-import {  useDispatch } from 'react-redux'
+import {  useDispatch, useSelector} from 'react-redux'
 import { filterPasswords } from '../context/slice/AppSlice'
+import { open } from '../context/slice/MenuItemsSlice';
 import { IconButton } from '@mui/material'
-import { IoMenu } from "react-icons/io5";
+import { IoMenu, IoClose} from "react-icons/io5";
+
+
 export function Navbar() {
 
   const dispatch = useDispatch()
+  const state = useSelector(state => state.menuItems)
+
+
   return (
     <div style={{
       margin: "auto",
@@ -35,8 +41,8 @@ export function Navbar() {
         outline:"none"
       }}
       />
-      <IconButton size='large'>
-          <IoMenu color='white'/>
+      <IconButton size='large' onClick={()=>dispatch(open())}>
+           {state.isOpen ? <IoClose color='white'/>:<IoMenu color='white'/>}
       </IconButton>
 
     </div>
