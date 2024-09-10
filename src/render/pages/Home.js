@@ -6,7 +6,9 @@ import { useDispatch, useSelector} from 'react-redux'
 import { setPasswords } from '../context/slice/AppSlice';
 import toast, { Toaster } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+
 export function Home() {
+    
      const state = useSelector(state => state.app)
     const dispatch = useDispatch()
     const navigate = useNavigate();
@@ -15,6 +17,7 @@ export function Home() {
 
 
     useEffect(async () => {
+
         if(state.passwords != null){
             navigate('/page-password')
         }else{
@@ -34,8 +37,6 @@ export function Home() {
             dispatch(setPasswords(response))
             navigate('/page-password')
 
-        } else {
-            toast.error("Intenta conectar nuevamente")
         }
 
     })

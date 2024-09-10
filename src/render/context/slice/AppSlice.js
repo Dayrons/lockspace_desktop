@@ -21,9 +21,15 @@ export const appSlice = createSlice({
       state.passwords = passwords.filter((password) => regex.test(password.titulo))
      
     },
+
+    clearPasswords:(state,action)=>{
+      state.passwords =null
+      localStorage.removeItem("passwords");
+
+    }
   },
 });
 
-export const { setPasswords, filterPasswords } = appSlice.actions;
+export const { setPasswords, filterPasswords, clearPasswords} = appSlice.actions;
 
 export default appSlice.reducer;

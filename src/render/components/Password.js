@@ -68,7 +68,7 @@ export function Password({ password }) {
 
                 <CopyToClipboard text={password.password}
                 >
-                    <IconButton size='small' onClick={(e) => {toast('Contraseña copiada')}}>
+                    <IconButton size='small' onClick={(e) => {toast.success('Contraseña copiada')}}>
                         <IoCopy color='#2CDA9D' />
                     </IconButton>
                 </CopyToClipboard>

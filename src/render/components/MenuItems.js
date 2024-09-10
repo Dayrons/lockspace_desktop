@@ -1,20 +1,32 @@
 import React from 'react'
-import {  useSelector} from 'react-redux'
+import {  useSelector, useDispatch} from 'react-redux'
 import { FiLogOut } from "react-icons/fi";
 import { IoQrCode } from "react-icons/io5";
-
+import { useNavigate } from 'react-router-dom';
+import { clearPasswords } from '../context/slice/AppSlice';
 export function MenuItems() {
+
+  const navigate = useNavigate();
   const state = useSelector(state => state.menuItems)
+  const dispatch = useDispatch()
+
   const items = [
     {
       title:"Cerra sesion",
       icon: <FiLogOut />,
-      function:()=>{}
+      function:()=>{
+        console.log("click")
+        dispatch(clearPasswords())
+        navigate('/')
+      }
     },
     {
       title:"Sincronizar",
       icon: <IoQrCode />,
-      function:()=>{}
+      function:()=>{
+        // localStorage.clear()
+        navigate('/')
+      }
     },
   ]
 
@@ -59,7 +71,10 @@ export function Item({item}){
       "&:hover":{
         
       }
-    }}>
+    }
+    }
+    onClick={()=>item.function()}
+    >
       <div style={{
         display:"flex",
         alignItems:"center",
