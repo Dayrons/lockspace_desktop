@@ -16,3 +16,21 @@ body{
     background:#1c1d22
   }
 }
+
+
+.scroll {
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    // height: 60px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: "#1c1d22",
+  }
+}

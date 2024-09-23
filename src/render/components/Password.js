@@ -2,7 +2,7 @@ import React from 'react'
 import IconButton from '@mui/material/IconButton';
 import { IoCopy } from "react-icons/io5";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { RiDraggable } from "react-icons/ri";
@@ -19,15 +19,17 @@ export function Password({ password }) {
     })
 
     return (
-        <>
-            <Toaster />
+
+            
 
             <div style={{
-                width: "100%",
+                width: "95%",
                 height: "25px",
-                padding: "15px 10px",
-                background: "rgba(43, 46, 61,0.5)",
-                margin: "20px 0",
+                padding: "20px",
+
+                background: "#1c1d22",
+                borderRadius:"10px",
+                margin: "10px 0",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -52,11 +54,11 @@ export function Password({ password }) {
                             display:"flex",
                             justifyContent:"center",
                             alignItems:"center",
-                            padding: "10px",
+                            padding: "10px ",
                             borderRadius:"5px",
                             cursor:"grab",
                             marginRight:"10px",
-                            background:"rgba(28, 29, 34, 0.8)"
+                            background: "rgba(43, 46, 61)",
                         }}
                     >
                         <RiDraggable />
@@ -74,7 +76,6 @@ export function Password({ password }) {
                 </CopyToClipboard>
             </div>
 
-        </>
 
     )
 }

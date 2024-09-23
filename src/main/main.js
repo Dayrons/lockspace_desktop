@@ -5,6 +5,7 @@ const fs = require("fs");
 const FtpSrv = require("ftp-srv");
 var jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
+const PasswordController = require("./controllers/PasswordController");
 
 let window;
 
@@ -28,6 +29,8 @@ ipcMain.handle("get-hostname", getHostname);
 
 // ipcMain.handle('start-server', initFtpServer)
 
+ipcMain.handle("register-password", PasswordController.registerPassword)
+
 ipcMain.on("start-server", initFtpServer);
 
 ipcMain.handle("get-file", getFile);
@@ -36,41 +39,47 @@ function getHostname(e, _) {
   const nets = networkInterfaces();
   const host = Object.create(null);
 
+  let ip ;
+
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
+
+
       const familyV4Value = typeof net.family === "string" ? "IPv4" : 4;
+    
       if (net.family === familyV4Value && !net.internal) {
+
         if (!host[name]) {
           host[name] = [];
         }
-        host[name].push(net.address);
+        
+        ip = net.address
+        macAddress = net.mac
+
+        // host[name].push(net.address);
       }
     }
   }
 
 
-   macAddress = networkInterfaces().eno1[0].mac;
 
+  // const key = CryptoJS.enc.Utf8.parse("secretkey:hapilyeverafter1234567"); 
 
+  // // El problema es que el iv es diferente en flutter crea encriptado diferente
+  // const iv = CryptoJS.lib.WordArray.random(16); 
 
-  const key = CryptoJS.enc.Utf8.parse("secretkey:hapilyeverafter1234567"); 
+  // const userEncrypt = CryptoJS.AES.encrypt(macAddress, key, { iv: iv });
+  // const decrypted = CryptoJS.AES.decrypt(userEncrypt, key, { iv: iv });
 
-  // El problema es que el iv es diferente en flutter crea encriptado diferente
-  const iv = CryptoJS.lib.WordArray.random(16); 
-
-  const userEncrypt = CryptoJS.AES.encrypt(macAddress, key, { iv: iv });
-  const decrypted = CryptoJS.AES.decrypt(userEncrypt, key, { iv: iv });
-
-  console.log(decrypted.toString(CryptoJS.enc.Utf8)); 
-  console.log(userEncrypt.toString());
+  // console.log(decrypted.toString(CryptoJS.enc.Utf8)); 
+  // console.log(userEncrypt.toString());
    
 
-  
 
   const data = {
     username:macAddress,
     password: "password",
-    host: host.eno1[0],
+    host: ip,
   };
 
   const secretKey = "1234";

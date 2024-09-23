@@ -36,12 +36,11 @@ export function MenuItems() {
         position:"absolute",
         transition: "all 0.5s ease",
         right: state.isOpen ?"0px" :"-260px",
-        background: "rgba(43, 46, 61)",
+        background: "#1c1d22",
         width :"260px",
         zIndex: "1000",
         boxSizing: "border-box",
-        
-        // paddingTop:"20px",
+
         overflow:"auto"
     }}>
       {items.map((item,index)=>{

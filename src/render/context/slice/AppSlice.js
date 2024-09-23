@@ -1,5 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getItem } from "../../utils/function";
+const { ipcRenderer } = require('electron')
+
 
 export const appSlice = createSlice({
   name: "app",
@@ -14,22 +16,40 @@ export const appSlice = createSlice({
 
     filterPasswords: (state, action) => {
       const text = action.payload;
-   
+
       const passwords = getItem({ str: "passwords" });
       const regex = new RegExp(text, "gi");
 
-      state.passwords = passwords.filter((password) => regex.test(password.titulo))
-     
+      state.passwords = passwords.filter((password) =>
+        regex.test(password.titulo)
+      );
     },
 
-    clearPasswords:(state,action)=>{
-      state.passwords =null
+    clearPasswords: (state, action) => {
+      state.passwords = null;
       localStorage.removeItem("passwords");
+    },
 
-    }
+    registerPassword: async (state, action) => {
+      
+      try {
+        await ipcRenderer.invoke('register-password', action.payload)
+      
+        console.log(response)
+      } catch (error) {
+        console.log(error)
+      }
+      
+
+    
+
+      
+   
+    },
   },
 });
 
-export const { setPasswords, filterPasswords, clearPasswords} = appSlice.actions;
+export const { setPasswords, filterPasswords, clearPasswords, registerPassword} =
+  appSlice.actions;
 
 export default appSlice.reducer;
