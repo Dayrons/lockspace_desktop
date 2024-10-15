@@ -14,8 +14,11 @@ let macAddress;
 const root = path.join(__dirname, "../../");
 function mainWindow() {
   window = new BrowserWindow({
-    width: 1000,
-    height: 600,
+    width: 750,
+    height: 400,
+    resizable: false,
+    frame: false, 
+    
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -25,11 +28,15 @@ function mainWindow() {
   window.loadFile(path.join(__dirname, "../", "../", "dist", "index.html"));
 }
 
+const mainMenu = Menu.buildFromTemplate([]);
+// Set The Menu to the Main Window
+Menu.setApplicationMenu(mainMenu);
+
 ipcMain.handle("get-hostname", getHostname);
 
 // ipcMain.handle('start-server', initFtpServer)
 
-ipcMain.handle("register-password", PasswordController.registerPassword)
+ipcMain.handle("register-password", PasswordController.registerPassword);
 
 ipcMain.on("start-server", initFtpServer);
 
@@ -39,45 +46,38 @@ function getHostname(e, _) {
   const nets = networkInterfaces();
   const host = Object.create(null);
 
-  let ip ;
+  let ip;
 
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
-
-
       const familyV4Value = typeof net.family === "string" ? "IPv4" : 4;
-    
-      if (net.family === familyV4Value && !net.internal) {
 
+      if (net.family === familyV4Value && !net.internal) {
         if (!host[name]) {
           host[name] = [];
         }
-        
-        ip = net.address
-        macAddress = net.mac
+
+        ip = net.address;
+        macAddress = net.mac;
 
         // host[name].push(net.address);
       }
     }
   }
 
-
-
-  // const key = CryptoJS.enc.Utf8.parse("secretkey:hapilyeverafter1234567"); 
+  // const key = CryptoJS.enc.Utf8.parse("secretkey:hapilyeverafter1234567");
 
   // // El problema es que el iv es diferente en flutter crea encriptado diferente
-  // const iv = CryptoJS.lib.WordArray.random(16); 
+  // const iv = CryptoJS.lib.WordArray.random(16);
 
   // const userEncrypt = CryptoJS.AES.encrypt(macAddress, key, { iv: iv });
   // const decrypted = CryptoJS.AES.decrypt(userEncrypt, key, { iv: iv });
 
-  // console.log(decrypted.toString(CryptoJS.enc.Utf8)); 
+  // console.log(decrypted.toString(CryptoJS.enc.Utf8));
   // console.log(userEncrypt.toString());
-   
-
 
   const data = {
-    username:macAddress,
+    username: macAddress,
     password: "password",
     host: ip,
   };
