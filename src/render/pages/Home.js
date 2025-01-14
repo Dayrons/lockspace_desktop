@@ -25,10 +25,10 @@ export function Home() {
   }, []);
 
   ipcRenderer.on("redirect", async (e, _) => {
-    const response = await ipcRenderer.invoke("get-file");
+    const res = await ipcRenderer.invoke("get-file");
 
-    if (response != null) {
-      dispatch(setPasswords(response));
+    if (res != null) {
+      dispatch(setPasswords(res));
       navigate("/page-password");
     }
   });
@@ -62,14 +62,35 @@ export function Home() {
             para gestionar tus contraseñas
           </h4>
 
-          <Formik>
+          <Formik
+            initialValues={{
+              name: "",
+              password: "",
+            }}
+            onSubmit={async (values) => {
+              // setsubmit(<CircularProgress size={30} style={{ margin: 'auto' }} />)
+
+              let res = await ipcRenderer.invoke("singin", values);
+              res = JSON.parse(res);
+              if (res.error) {
+                toast.error(res.message);
+              } else {
+                // window.localStorage.setItem('usuario', JSON.stringify(res.data))
+                // const user = await ipcRenderer.invoke('localStorage', res.data)
+                // navigate("/dashboard")
+                // toast.success('logeado')
+              }
+              // setsubmit(<button className='boton'>Ingresar</button>)
+            }}
+          >
             {({}) => (
               <form action="">
                 <input
                   type="text"
                   placeholder="Usuario"
+                  name="name"
                   style={{
-                    color: "white",
+                    color: "black",
                     height: "30px",
                     width: "100%",
                     boxSizing: "border-box",
@@ -81,12 +102,12 @@ export function Home() {
                     marginBottom: "20px",
                   }}
                 />
-
                 <input
                   type="text"
                   placeholder="Contraseña"
+                  name="password"
                   style={{
-                    color: "white",
+                    color: "black",
                     height: "30px",
                     width: "100%",
                     boxSizing: "border-box",
@@ -99,21 +120,21 @@ export function Home() {
                   }}
                 />
                 <div>
-                <Checkbox
-                  defaultChecked
-                  color="success"
-                  sx={{
-                    color: '"rgba(44, 218, 157, 1)"',
-                    "&.Mui-checked": {
-                      color: "rgba(44, 218, 157, 1)",
-                    },
-                    "&.Mui-disabled": {
-                      color: "grey",
-                    },
-                  }}
-                />
-                <span>Recuerdame</span>
-                </div> 
+                  <Checkbox
+                    defaultChecked
+                    color="success"
+                    sx={{
+                      color: '"rgba(44, 218, 157, 1)"',
+                      "&.Mui-checked": {
+                        color: "rgba(44, 218, 157, 1)",
+                      },
+                      "&.Mui-disabled": {
+                        color: "grey",
+                      },
+                    }}
+                  />
+                  <span>Recuerdame</span>
+                </div>
                 <button
                   style={{
                     height: "40px",
@@ -135,6 +156,20 @@ export function Home() {
                 >
                   Iniciar sesion
                 </button>
+                ¨
+                <p>
+                  Aun no tienes cuenta?{" "}
+                  <span
+                    style={{
+                      color: "rgba(44, 218, 157, 1)",
+                      cursor: "pointer",
+                      fontWeight:"bold"
+                    }}
+                    onClick={()=>navigate("/signup")}
+                  >
+                    Comenzar
+                  </span>
+                </p>
               </form>
             )}
           </Formik>

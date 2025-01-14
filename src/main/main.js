@@ -1,4 +1,5 @@
 const { BrowserWindow, ipcMain, dialog, Menu } = require("electron");
+
 const { networkInterfaces } = require("os");
 const path = require("path");
 const fs = require("fs");
@@ -6,6 +7,7 @@ const FtpSrv = require("ftp-srv");
 var jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
 const PasswordController = require("./controllers/PasswordController");
+const AuthController = require("./controllers/AuthController");
 
 let window;
 
@@ -17,7 +19,8 @@ function mainWindow() {
     width: 750,
     height: 400,
     resizable: false,
-    frame: false, 
+    // frame: false,
+    titleBarStyle: 'hidden',
     
     webPreferences: {
       nodeIntegration: true,
@@ -25,14 +28,22 @@ function mainWindow() {
     },
   });
 
+
   window.loadFile(path.join(__dirname, "../", "../", "dist", "index.html"));
 }
 
-const mainMenu = Menu.buildFromTemplate([]);
-// Set The Menu to the Main Window
-Menu.setApplicationMenu(mainMenu);
+
+
+
+
+// const mainMenu = Menu.buildFromTemplate([]);
+// // Set The Menu to the Main Window
+// Menu.setApplicationMenu(mainMenu);
 
 ipcMain.handle("get-hostname", getHostname);
+
+ipcMain.handle("singin", AuthController.singin);
+
 
 // ipcMain.handle('start-server', initFtpServer)
 
