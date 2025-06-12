@@ -8,7 +8,7 @@ var jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
 const PasswordController = require("./controllers/PasswordController");
 const AuthController = require("./controllers/AuthController");
-
+const fernet = require("fernet");
 let window;
 
 let macAddress;
@@ -20,21 +20,16 @@ function mainWindow() {
     height: 400,
     resizable: false,
     // frame: false,
-    titleBarStyle: 'hidden',
-    
+    titleBarStyle: "hidden",
+
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
   });
 
-
   window.loadFile(path.join(__dirname, "../", "../", "dist", "index.html"));
 }
-
-
-
-
 
 // const mainMenu = Menu.buildFromTemplate([]);
 // // Set The Menu to the Main Window
@@ -43,7 +38,6 @@ function mainWindow() {
 ipcMain.handle("get-hostname", getHostname);
 
 ipcMain.handle("singin", AuthController.singin);
-
 
 // ipcMain.handle('start-server', initFtpServer)
 
@@ -153,7 +147,28 @@ function getFile(e, _) {
   if (exist) {
     const data = fs.readFileSync(file, "utf-8");
     fs.unlinkSync(file);
-    return JSON.parse(data);
+
+    let passwords = JSON.parse(data);
+
+    passwords = passwords.map((password) => {
+      const secret = new fernet.Secret(
+        "VGVjaFdpdGhWUElzQmVzdFRlY2hXaXRoVlBJc0Jlc3Q="
+      );
+
+
+     
+      const decryptedPassword = new fernet.Token({
+        secret: secret,
+        token: password.password,
+        ttl: 0,
+      });
+
+      password.password = decryptedPassword.decode();
+      console.log(decryptedPassword)
+      return password;
+    });
+
+    return passwords;
   }
 
   return null;
