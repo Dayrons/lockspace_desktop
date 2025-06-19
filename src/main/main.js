@@ -16,10 +16,10 @@ let macAddress;
 const root = path.join(__dirname, "../../");
 function mainWindow() {
   window = new BrowserWindow({
-    width: 750,
-    height: 400,
+    width: false,
+    height: false,
     resizable: false,
-    // frame: false,
+    frame: false,
     titleBarStyle: "hidden",
 
     webPreferences: {
@@ -164,7 +164,6 @@ function getFile(e, _) {
       });
 
       password.password = decryptedPassword.decode();
-      console.log(decryptedPassword)
       return password;
     });
 

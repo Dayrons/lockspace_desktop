@@ -64,7 +64,7 @@ export function Password({ password }) {
                         <RiDraggable />
 
                     </div>
-                    <h3>{password.title}</h3>
+                    <h5>{password.title}</h5>
                 </div>
 
 

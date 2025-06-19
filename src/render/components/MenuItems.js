@@ -60,16 +60,16 @@ export function Item({item}){
     <div className='menu-item' style={{
       padding:"10px",
       margin:"10px",
-      background:" #1c1d22",
+      // background:" #1c1d22",
       borderRadius:"5px",
       color:"white",
       fontSize:"16px",
       // borderBottom:"1px solid white",
       cursor:"pointer",
       transition:"0.3s",
-      "&:hover":{
+      // "&:hover":{
         
-      }
+      // }
     }
     }
     onClick={()=>item.function()}
@@ -82,7 +82,7 @@ export function Item({item}){
         <div style={{
           width:"30px",
           height:"30px",
-          borderRadius:"2px",
+          borderRadius:"10px",
           background:"rgba(44, 218, 157, 0.2)",
           display:"flex",
           justifyContent:"center",

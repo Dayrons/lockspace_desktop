@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { filterPasswords } from "../context/slice/AppSlice";
 import { open } from "../context/slice/MenuItemsSlice";
 import { IconButton } from "@mui/material";
-import { IoMenu, IoClose } from "react-icons/io5";
+import { IoMenu, IoClose, IoSearch } from "react-icons/io5";
 import logo from "../../assets/logo.png"
 export function Navbar() {
   const dispatch = useDispatch();
@@ -30,12 +30,38 @@ export function Navbar() {
           display: "flex",
           justifyContent: "space-between",
           alignContent: "center",
+          alignItems: "center",
         }}
       >
-        <div>
-          {/* colocar icono De lupa */}
+       <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+       }}>
+        {/* <img src={logo} alt="Logo" style={{ width: "60px", height: "60px" }} /> */}
+
+         <div style={{
+              color: "white",
+              // height: "30px",
+              width: "260px",
+              boxSizing: "border-box",
+              borderRadius: "5px",
+              padding: "0 5px",
+              background: "#1c1d22",
+              border: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              outline: "none",
+              '::placeholder': {
+                color: 'white',
+                opacity: 1,
+              },
+            }}>
 
           <input
+            placeholder="Buscar contraseña"
+            autoFocus
             type="search"
             onKeyUp={(e) => {
               dispatch(filterPasswords(e.target.value));
@@ -43,21 +69,38 @@ export function Navbar() {
             style={{
               color: "white",
               height: "30px",
-              width: "260px",
+              width: "80%",
               boxSizing: "border-box",
-              borderRadius: "5px",
-              padding: "20px",
-              background: "#1c1d22",
+              // borderRadius: "5px",
+              padding: "20px 0",
+              background: "none",
               border: "none",
               outline: "none",
+              '::placeholder': {
+                color: 'white',
+                opacity: 1,
+              },
             }}
           />
+          
+          <IoSearch/>
+
         </div>
+       </div>
 
         <IconButton size="large" onClick={() => dispatch(open())}>
           {state.isOpen ? <IoClose color="white" /> : <IoMenu color="white" />}
         </IconButton>
       </div>
+      {/* Estilo global para el placeholder */}
+      <style>
+        {`
+          input::placeholder {
+            color: white !important;
+            opacity: 1;
+          }
+        `}
+      </style>
     </div>
   );
 }

@@ -11,11 +11,16 @@ body{
 }
 
 
-.menu-item{
-  &:hover{
-    background:#1c1d22
+.menu-item {
+
+  &:hover {
+    background: #2c2d32;
   }
 }
+
+// .menu-item:hover {
+//   background: red;
+// }
 
 
 .scroll {

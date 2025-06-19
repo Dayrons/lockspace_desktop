@@ -4,9 +4,25 @@
   "description": "",
   "main": "src/main/index.js",
   "scripts": {
-    "build": "webpack --watch --mode production",
-    "dev": "webpack --watch --mode development",
-    "start": "electron ."
+    "build": "webpack --mode production",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --ia32",
+    "postinstall": "install-app-deps"
+  },
+  "build": {
+    "appId": "com.softplus.lockspace",
+    "files": [
+      "dist/**/*",
+      "src/main/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
   },
   "keywords": [],
   "author": "",
@@ -18,6 +34,8 @@
     "@babel/preset-react": "^7.14.5",
     "babel-loader": "^8.2.2",
     "css-loader": "^6.2.0",
+    "electron": "^13.2.3",
+    "electron-builder": "^26.0.12",
     "file-loader": "^6.2.0",
     "html-loader": "^2.1.2",
     "html-webpack-plugin": "^5.3.2",
@@ -42,7 +60,6 @@
     "bootstrap": "^5.1.3",
     "boxicons": "^2.0.9",
     "crypto-js": "^4.2.0",
-    "electron": "^13.2.3",
     "electron-reload": "^2.0.0-alpha.1",
     "fernet": "^0.3.3",
     "fernet-nodejs": "^1.0.6",
