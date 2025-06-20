@@ -4,6 +4,8 @@
   "description": "",
   "main": "src/main/index.js",
   "scripts": {
+    "dev": "webpack --watch --mode development",
+    "start": "electron .",
     "build": "webpack --mode production",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --ia32",
@@ -60,6 +62,7 @@
     "bootstrap": "^5.1.3",
     "boxicons": "^2.0.9",
     "crypto-js": "^4.2.0",
+    "dotenv": "^16.5.0",
     "electron-reload": "^2.0.0-alpha.1",
     "fernet": "^0.3.3",
     "fernet-nodejs": "^1.0.6",

@@ -2,3 +2,4 @@ node_modules/
 dist
 passwords.txt
 src/main/database.db
+.env
