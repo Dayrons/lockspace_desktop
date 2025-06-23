@@ -72,6 +72,7 @@
     "js-file-download": "^0.4.12",
     "jsonwebtoken": "^9.0.2",
     "laravel-echo": "^1.11.3",
+    "node-machine-id": "^1.1.12",
     "prop-types": "^15.7.2",
     "pusher": "^5.0.0",
     "pusher-js": "^7.0.3",

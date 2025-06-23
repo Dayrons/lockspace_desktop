@@ -6,12 +6,16 @@ const fs = require("fs");
 const FtpSrv = require("ftp-srv");
 var jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
+const crypto = require('crypto');
 const PasswordController = require("./controllers/PasswordController");
 const AuthController = require("./controllers/AuthController");
 const fernet = require("fernet");
+const { Password } = require("./models/Password");
+const { machineId } = require("node-machine-id");
 let window;
 
 let macAddress;
+const uuid = 'password'; 
 
 const root = path.join(__dirname, "../../");
 function mainWindow() {
@@ -83,7 +87,7 @@ function getHostname(e, _) {
 
   const data = {
     username: macAddress,
-    password: "password",
+    password: uuid,
     host: ip,
   };
 
@@ -109,11 +113,11 @@ function initFtpServer(e, _) {
     "login",
     ({ connection, username, password }, resolve, reject) => {
       connection.on("STOR", async (error, file) => {
-        console.log(`FILE ${file}`);
+        
         window.webContents.send("redirect");
       });
 
-      if (username === macAddress && password === "password") {
+      if (username === macAddress && password === uuid) {
         return resolve({ root: root });
       }
       return reject(
@@ -140,34 +144,53 @@ function initFtpServer(e, _) {
   });
 }
 
-function getFile(e, _) {
-  const file = path.join(root, "password.txt");
+async function getFile(e, _) {
+  const file = path.join(root, "data.txt");
   const exist = fs.existsSync(file);
 
   if (exist) {
     const data = fs.readFileSync(file, "utf-8");
     fs.unlinkSync(file);
 
-    let passwords = JSON.parse(data);
+    let dataResponse = JSON.parse(data);
 
-    passwords = passwords.map((password) => {
-      const secret = new fernet.Secret(
-        "VGVjaFdpdGhWUElzQmVzdFRlY2hXaXRoVlBJc0Jlc3Q="
-      );
+    const buffer = Buffer.from(dataResponse.uuid, "utf8");
+    const uuid = buffer.toString("base64");
+   
 
+    let passwords = dataResponse.passwords;
 
-     
+    passwords = passwords.map(async (password) => {
+       let secret = new fernet.Secret(uuid);
       const decryptedPassword = new fernet.Token({
         secret: secret,
         token: password.password,
         ttl: 0,
       });
-
       password.password = decryptedPassword.decode();
+
+      const newSecret = await machineId();
+
+      secret = new fernet.Secret(newSecret);
+
+      const token = new fernet.Token({ secret: secret });
+
+      console.log(`Password ${password}`);
+
+      // await Password.create({
+      //   externalId: password.id,
+      //   title: password.title,
+      //   password: token.encode(password.password),
+      //   expiration: password.expiration,
+      //   expirationUnit: password.expirationUnit,
+      //   createdAt: password.createdAt,
+      //   updatedAt: password.updatedAt,
+      // });
+
       return password;
     });
 
-    return passwords;
+    return null;
   }
 
   return null;
