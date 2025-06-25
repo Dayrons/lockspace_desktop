@@ -1,5 +1,7 @@
+.vscode
 node_modules/
 dist
 passwords.txt
-src/main/database.db
+*.db
+*.sqlite
 .env

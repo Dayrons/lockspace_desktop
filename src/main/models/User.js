@@ -4,7 +4,7 @@ const {sequelize} =require('../config/db')
 
 
 
-const User = sequelize.define('tbl_users',{   
+const User = sequelize.define('tbl_user',{   
     name:{
        type: DataTypes.CHAR,
        allowNull: false,

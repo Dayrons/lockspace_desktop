@@ -10,6 +10,16 @@ const sequelize = new Sequelize({
     //     freezeTableName: true
     // }
 });
+
+// const sequelize = new Sequelize("lockspace", "postgres","1234", {
+//   host: 'localhost',
+//   dialect: 'postgres',
+//   logging:false,
+//   define: {
+//     freezeTableName: true
+//   }
+// });
+    
     
     
 

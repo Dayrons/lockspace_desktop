@@ -1,10 +1,16 @@
 const { ipcRenderer } = require("electron");
 import { Checkbox, CircularProgress } from "@mui/material";
 import { Formik } from "formik";
-import React, {useState} from "react";
-
+import React, { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+import { useSelector, useDispatch } from "react-redux";
+import { setUser } from "../context/slice/UserSlice";
+import { useNavigate } from "react-router-dom";
 function SignupPage() {
   const [loading, setloading] = useState(false);
+  const [sesionActive, setSesionActive] = useState(true);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   return (
     <div
       style={{
@@ -14,20 +20,25 @@ function SignupPage() {
         height: "100vh",
       }}
     >
+      <Toaster />
       <Formik
         initialValues={{
           name: "",
           password: "",
         }}
         onSubmit={async (values) => {
-          setloading(true);
-          let res = await ipcRenderer.invoke("signup", values);
-
-          if (res.error) {
-            toast.error("Hubo un error al registrar el Usuario");
-          } else {
-            toast.success("Cliente registrado");
-            // navigate(-1)
+          try {
+            setloading(true);
+            let res = await ipcRenderer.invoke("signup", values);
+            if (res.error) {
+              toast.error("Hubo un error al registrar el Usuario");
+            } else {
+              dispatch(setUser(res.data));
+              toast.success("Cuenta creada con exito");
+              navigate("/page-password");
+            }
+          } catch (error) {
+            toast.error(`${error}`);
           }
           setloading(false);
         }}
@@ -97,13 +108,16 @@ function SignupPage() {
             />
 
             {loading ? (
-              <div style={{
-                display:"flex",
-                justifyContent:"center",
-                alignContent:"center",
-                alignItems:"center"
-              }}>
-                <CircularProgress />
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <CircularProgress sx={{ color: "rgba(44, 218, 157, 1)" }} />
               </div>
             ) : (
               <button
@@ -130,7 +144,8 @@ function SignupPage() {
 
             <div>
               <Checkbox
-                defaultChecked
+                checked={sesionActive}
+                onChange={(e) => setSesionActive(e.target.checked)}
                 color="success"
                 sx={{
                   marginLeft: 0,

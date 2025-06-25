@@ -3,16 +3,19 @@ import { Button } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { useDispatch, useSelector } from "react-redux";
-import { setPasswords } from "../context/slice/AppSlice";
+import { setPasswords } from "../context/slice/UserSlice";
+import { setUser } from "../context/slice/UserSlice";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { Formik } from "formik";
-import Checkbox from "@mui/material/Checkbox";
+import { Checkbox, CircularProgress } from "@mui/material";
+
 export function Home() {
   const state = useSelector((state) => state.app);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [value, setvalue] = useState("");
+  const [loading, setloading] = useState(false);
 
   useEffect(async () => {
     if (state.passwords != null) {
@@ -68,29 +71,28 @@ export function Home() {
               password: "",
             }}
             onSubmit={async (values) => {
-              // setsubmit(<CircularProgress size={30} style={{ margin: 'auto' }} />)
-
+              setloading(true)
               let res = await ipcRenderer.invoke("singin", values);
               res = JSON.parse(res);
               if (res.error) {
                 toast.error(res.message);
               } else {
-                // window.localStorage.setItem('usuario', JSON.stringify(res.data))
-                // const user = await ipcRenderer.invoke('localStorage', res.data)
-                // navigate("/dashboard")
-                // toast.success('logeado')
+                dispatch(setUser(res.data));
+                toast.success("logeado");
+                navigate("/page-password");
               }
-              // setsubmit(<button className='boton'>Ingresar</button>)
+              setloading(false)
+
             }}
           >
             {({
-            values,
-            handleSubmit,
-            touched,
-            errors,
-            handleChange,
-            handleBlur,
-          }) => (
+              values,
+              handleSubmit,
+              touched,
+              errors,
+              handleChange,
+              handleBlur,
+            }) => (
               <form onSubmit={handleSubmit}>
                 <input
                   type="text"
@@ -148,37 +150,52 @@ export function Home() {
                   />
                   <span>Recuerdame</span>
                 </div>
-                <button
-                  style={{
-                    height: "40px",
-                    width: "100%",
-                    borderRadius: "5px",
-                    border: "none",
-                    marginTop: "10px",
-                    padding: "10px",
-                    background: "rgba(44, 218, 157, 1)",
-                    display: "flex",
-                    color: "white",
-                    fontSize: "16px",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                  }}
-                  type="submit"
-                >
-                  Iniciar sesion
-                </button>
-                ¨
+
+                {loading ? (
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <CircularProgress sx={{ color: "rgba(44, 218, 157, 1)" }} />
+                  </div>
+                ) : (
+                  <button
+                    style={{
+                      height: "40px",
+                      width: "100%",
+                      borderRadius: "5px",
+                      border: "none",
+                      marginTop: "10px",
+                      padding: "10px",
+                      background: "rgba(44, 218, 157, 1)",
+                      display: "flex",
+                      color: "white",
+                      fontSize: "16px",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                    type="submit"
+                  >
+                    Iniciar sesion
+                  </button>
+                )}
+
                 <p>
                   Aun no tienes cuenta?{" "}
                   <span
                     style={{
                       color: "rgba(44, 218, 157, 1)",
                       cursor: "pointer",
-                      fontWeight:"bold"
+                      fontWeight: "bold",
                     }}
-                    onClick={()=>navigate("/signup")}
+                    onClick={() => navigate("/signup")}
                   >
                     Comenzar
                   </span>
