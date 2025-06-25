@@ -18,7 +18,7 @@ export function Home() {
   const [loading, setloading] = useState(false);
 
   useEffect(async () => {
-    if (state.passwords != null) {
+    if (false) {
       navigate("/page-password");
     } else {
       const jwt = await ipcRenderer.invoke("get-hostname");

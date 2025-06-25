@@ -11,11 +11,15 @@ class AuthController {
             where: {
                 name: values.name.toLowerCase(),
             },
-            include: [Password]
+            // include: [Password]
         })
+    //    await Password.create({
+    //         title:"Prueba",
+    //         password:"12345678",
+    //         UserId :user.id
+    //     })
 
         if (user !== null) {
-            console.log(user)
             const validatePassword = await bcrypt.compare(values.password, user.password)
             if (validatePassword) {
                 return JSON.stringify({ error: false, data: user })

@@ -8,6 +8,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { setPasswords } from "../context/slice/AppSlice";
+import { getPasswords } from "../context/slice/AppSlice";
 import { Toaster } from "react-hot-toast";
 import { IoAddOutline } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
@@ -53,6 +54,7 @@ export function ListPassword() {
       }
     }
     window.addEventListener("mousemove", handleMouseMove);
+    dispatch(getPasswords())
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 

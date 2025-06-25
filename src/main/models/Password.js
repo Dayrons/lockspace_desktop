@@ -1,9 +1,9 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db");
 const { create } = require("html-pdf");
-const { User } = require("./User");
 
-const Password = sequelize.define("tbl_password", {
+
+const Password = sequelize.define("Password", {
   externalId: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -39,8 +39,6 @@ const Password = sequelize.define("tbl_password", {
   
 });
 
-Password.belongsTo(User);
 
-User.hasMany(Password);
 
 module.exports = { Password };

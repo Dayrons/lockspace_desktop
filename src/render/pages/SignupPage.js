@@ -30,6 +30,7 @@ function SignupPage() {
           try {
             setloading(true);
             let res = await ipcRenderer.invoke("signup", values);
+            res = JSON.parse(res)
             if (res.error) {
               toast.error("Hubo un error al registrar el Usuario");
             } else {

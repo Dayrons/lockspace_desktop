@@ -1,10 +1,11 @@
 const { DataTypes } =require('sequelize');
-const {sequelize} =require('../config/db')
+const {sequelize} =require('../config/db');
+const { Password } = require('./Password');
 
 
 
 
-const User = sequelize.define('tbl_user',{   
+const User = sequelize.define('User',{   
     name:{
        type: DataTypes.CHAR,
        allowNull: false,
@@ -20,6 +21,8 @@ const User = sequelize.define('tbl_user',{
     timestamps: true
 } );
 
+User.hasMany(Password);
+Password.belongsTo(User);
 
 
 

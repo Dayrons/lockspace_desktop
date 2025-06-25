@@ -1,11 +1,11 @@
 
 
 
-export const getItem = ({str}) =>{
+export const getItem = ({str, defaultValue=null}, ) =>{
 
     const item  = localStorage.getItem(str)
     if(item){
         return JSON.parse(item)
     }
-    return null
+    return defaultValue
 }
