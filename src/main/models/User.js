@@ -4,9 +4,7 @@ const {sequelize} =require('../config/db')
 
 
 
-const User = sequelize.define('tbl_user',{   
-
- 
+const User = sequelize.define('tbl_users',{   
     name:{
        type: DataTypes.CHAR,
        allowNull: false,
@@ -16,9 +14,11 @@ const User = sequelize.define('tbl_user',{
         type: DataTypes.TEXT,
         allowNull: false
     },
-
     
-  }, );
+
+  },{
+    timestamps: true
+} );
 
 
 

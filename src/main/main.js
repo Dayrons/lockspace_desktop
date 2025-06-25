@@ -23,7 +23,7 @@ function mainWindow() {
     width: false,
     height: false,
     resizable: false,
-    frame: false,
+    // frame: false,
     titleBarStyle: "hidden",
 
     webPreferences: {
@@ -42,6 +42,7 @@ function mainWindow() {
 ipcMain.handle("get-hostname", getHostname);
 
 ipcMain.handle("singin", AuthController.singin);
+ipcMain.handle("signup", AuthController.signup);
 
 // ipcMain.handle('start-server', initFtpServer)
 

@@ -83,12 +83,22 @@ export function Home() {
               // setsubmit(<button className='boton'>Ingresar</button>)
             }}
           >
-            {({}) => (
-              <form action="">
+            {({
+            values,
+            handleSubmit,
+            touched,
+            errors,
+            handleChange,
+            handleBlur,
+          }) => (
+              <form onSubmit={handleSubmit}>
                 <input
                   type="text"
                   placeholder="Usuario"
                   name="name"
+                  value={values.name}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     color: "black",
                     height: "30px",
@@ -106,6 +116,9 @@ export function Home() {
                   type="text"
                   placeholder="Contraseña"
                   name="password"
+                  value={values.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   style={{
                     color: "black",
                     height: "30px",

@@ -1,8 +1,10 @@
-import { Checkbox } from "@mui/material";
+const { ipcRenderer } = require("electron");
+import { Checkbox, CircularProgress } from "@mui/material";
 import { Formik } from "formik";
-import React from "react";
+import React, {useState} from "react";
 
 function SignupPage() {
+  const [loading, setloading] = useState(false);
   return (
     <div
       style={{
@@ -17,17 +19,36 @@ function SignupPage() {
           name: "",
           password: "",
         }}
-        onSubmit={async (values) => {}}
+        onSubmit={async (values) => {
+          setloading(true);
+          let res = await ipcRenderer.invoke("signup", values);
+
+          if (res.error) {
+            toast.error("Hubo un error al registrar el Usuario");
+          } else {
+            toast.success("Cliente registrado");
+            // navigate(-1)
+          }
+          setloading(false);
+        }}
       >
-        {({}) => (
+        {({
+          values,
+          handleSubmit,
+          touched,
+          errors,
+          handleChange,
+          handleBlur,
+        }) => (
           <form
+            onSubmit={handleSubmit}
             style={{
               width: "300px",
               height: "450px",
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-evenly",
-              alignItems:"start"
+              alignItems: "start",
             }}
           >
             <h1 style={{ margin: "10px 0" }}>Comencemos</h1>
@@ -38,6 +59,9 @@ function SignupPage() {
               type="text"
               placeholder="Usuario"
               name="name"
+              value={values.name}
+              onChange={handleChange}
+              onBlur={handleBlur}
               style={{
                 color: "black",
                 height: "30px",
@@ -55,6 +79,9 @@ function SignupPage() {
               type="text"
               placeholder="Contraseña"
               name="password"
+              value={values.password}
+              onChange={handleChange}
+              onBlur={handleBlur}
               style={{
                 color: "black",
                 height: "30px",
@@ -69,33 +96,44 @@ function SignupPage() {
               }}
             />
 
-            <button
-              style={{
-                height: "40px",
-                width: "100%",
-                borderRadius: "5px",
-                border: "none",
-                padding: "10px",
-                background: "rgba(44, 218, 157, 1)",
-                display: "flex",
-                color: "white",
-                fontSize: "16px",
-                justifyContent: "center",
-                alignItems: "center",
-                cursor: "pointer",
-                fontWeight: "bold",
-              }}
-              type="submit"
-            >
-              Comenzar
-            </button>
+            {loading ? (
+              <div style={{
+                display:"flex",
+                justifyContent:"center",
+                alignContent:"center",
+                alignItems:"center"
+              }}>
+                <CircularProgress />
+              </div>
+            ) : (
+              <button
+                style={{
+                  height: "40px",
+                  width: "100%",
+                  borderRadius: "5px",
+                  border: "none",
+                  padding: "10px",
+                  background: "rgba(44, 218, 157, 1)",
+                  display: "flex",
+                  color: "white",
+                  fontSize: "16px",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+                type="submit"
+              >
+                Comenzar
+              </button>
+            )}
 
-            <div >
+            <div>
               <Checkbox
                 defaultChecked
                 color="success"
                 sx={{
-                  marginLeft:0,
+                  marginLeft: 0,
                   // paddingLeft:0,
                   color: '"rgba(44, 218, 157, 1)"',
                   "&.Mui-checked": {

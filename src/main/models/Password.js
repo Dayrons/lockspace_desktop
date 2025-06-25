@@ -3,7 +3,7 @@ const { sequelize } = require("../config/db");
 const { create } = require("html-pdf");
 const { User } = require("./User");
 
-const Password = sequelize.define("tbl_password", {
+const Password = sequelize.define("tbl_passwords", {
   externalId: {
     type: DataTypes.INTEGER,
     allowNull: true,
