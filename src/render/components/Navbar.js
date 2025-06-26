@@ -1,13 +1,25 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { filterPasswords } from "../context/slice/AppSlice";
+import { setPasswords } from "../context/slice/AppSlice";
 import { open } from "../context/slice/MenuItemsSlice";
 import { IconButton } from "@mui/material";
 import { IoMenu, IoClose, IoSearch } from "react-icons/io5";
-import logo from "../../assets/logo.png"
+import logo from "../../assets/logo.png";
+import { getItem } from "../utils/function";
+import { ipcRenderer } from "electron";
 export function Navbar() {
   const dispatch = useDispatch();
   const state = useSelector((state) => state.menuItems);
+
+  const search = async (e) => {
+    const user = getItem({ str: "user" });
+    let res = await ipcRenderer.invoke("search-password", {
+      user,
+      text: e.target.value,
+    });
+    res = JSON.parse(res);
+    dispatch(setPasswords(res.data));
+  };
 
   return (
     <div
@@ -33,14 +45,17 @@ export function Navbar() {
           alignItems: "center",
         }}
       >
-       <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-       }}>
-        {/* <img src={logo} alt="Logo" style={{ width: "60px", height: "60px" }} /> */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* <img src={logo} alt="Logo" style={{ width: "60px", height: "60px" }} /> */}
 
-         <div style={{
+          <div
+            style={{
               color: "white",
               // height: "30px",
               width: "260px",
@@ -53,40 +68,37 @@ export function Navbar() {
               alignItems: "center",
               justifyContent: "space-between",
               outline: "none",
-              '::placeholder': {
-                color: 'white',
-                opacity: 1,
-              },
-            }}>
-
-          <input
-            placeholder="Buscar contraseña"
-            autoFocus
-            type="search"
-            onKeyUp={(e) => {
-              dispatch(filterPasswords(e.target.value));
-            }}
-            style={{
-              color: "white",
-              height: "30px",
-              width: "80%",
-              boxSizing: "border-box",
-              // borderRadius: "5px",
-              padding: "20px 0",
-              background: "none",
-              border: "none",
-              outline: "none",
-              '::placeholder': {
-                color: 'white',
+              "::placeholder": {
+                color: "white",
                 opacity: 1,
               },
             }}
-          />
-          
-          <IoSearch/>
+          >
+            <input
+              placeholder="Buscar contraseña"
+              autoFocus
+              type="search"
+              onKeyUp={search}
+              style={{
+                color: "white",
+                height: "30px",
+                width: "80%",
+                boxSizing: "border-box",
+                // borderRadius: "5px",
+                padding: "20px 0",
+                background: "none",
+                border: "none",
+                outline: "none",
+                "::placeholder": {
+                  color: "white",
+                  opacity: 1,
+                },
+              }}
+            />
 
+            <IoSearch />
+          </div>
         </div>
-       </div>
 
         <IconButton size="large" onClick={() => dispatch(open())}>
           {state.isOpen ? <IoClose color="white" /> : <IoMenu color="white" />}

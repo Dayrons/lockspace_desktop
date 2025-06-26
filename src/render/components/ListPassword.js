@@ -7,12 +7,15 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { setPasswords } from "../context/slice/AppSlice";
-import { getPasswords } from "../context/slice/AppSlice";
+import { setPasswords, getPasswords } from "../context/slice/AppSlice";
+
 import { Toaster } from "react-hot-toast";
 import { IoAddOutline } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import logo from "../../assets/logo.png"
+import { getItem } from "../utils/function";
+const { ipcRenderer } = require('electron')
+
 
 export function ListPassword() {
   const dispatch = useDispatch();
@@ -54,9 +57,18 @@ export function ListPassword() {
       }
     }
     window.addEventListener("mousemove", handleMouseMove);
-    dispatch(getPasswords())
+    getData()
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+
+  const getData = async ()=>{
+    const user = getItem({str:"user"})
+    let res = await ipcRenderer.invoke('get-password', user)
+    res = JSON.parse(res)
+    dispatch(setPasswords(res.data))
+  }
+
 
   return (
     <>

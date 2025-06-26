@@ -11,27 +11,24 @@ export const appSlice = createSlice({
   reducers: {
     setPasswords: (state, action) => {
       state.passwords = action.payload;
-      localStorage.setItem("passwords", JSON.stringify(action.payload));
+      // localStorage.setItem("passwords", JSON.stringify(action.payload));
     },
 
-    getPasswords: async(state, action)=>{
-        const user = getItem({str:"user"})
-        let res = await ipcRenderer.invoke('get-password', user)
-        res = JSON.parse(res)
-        console.log(res)
-        state.passwords = res.data 
+    // getPasswords:  (state, action)=>{
+       
+    //     state.passwords = action.payload
 
-    },
+    // },
 
     filterPasswords: (state, action) => {
-      const text = action.payload;
+      // const text = action.payload;
 
-      const passwords = getItem({ str: "passwords" });
-      const regex = new RegExp(text, "gi");
+      // const passwords = getItem({ str: "passwords" });
+      // const regex = new RegExp(text, "gi");
 
-      state.passwords = passwords.filter((password) =>
-        regex.test(password.titulo)
-      );
+      // state.passwords = passwords.filter((password) =>
+      //   regex.test(password.titulo)
+      // );
     },
 
     clearPasswords: (state, action) => {

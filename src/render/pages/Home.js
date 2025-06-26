@@ -3,7 +3,7 @@ import { Button } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { useDispatch, useSelector } from "react-redux";
-import { setPasswords } from "../context/slice/UserSlice";
+import { setPasswords } from "../context/slice/AppSlice";
 import { setUser } from "../context/slice/UserSlice";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
