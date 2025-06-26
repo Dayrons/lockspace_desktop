@@ -33,7 +33,12 @@ class PasswordController {
   async create(e, values) {
     const password =   await Password.create(values)
 
-    return {error:false, data:password};
+    return JSON.stringify({error:false, data:password});
+  }
+  async delete(e, values){
+    const password = await Password.destroy({ where: { id:values.id,UserId:values.UserId } })
+    return JSON.stringify({error:false, data:password});
+
   }
 }
 

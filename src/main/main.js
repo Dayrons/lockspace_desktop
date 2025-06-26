@@ -46,6 +46,7 @@ ipcMain.handle("signup", AuthController.signup);
 
 // ipcMain.handle('start-server', initFtpServer)
 
+ipcMain.handle("delete-password", PasswordController.delete);
 ipcMain.handle("create-password", PasswordController.create);
 ipcMain.handle("get-password", PasswordController.get);
 ipcMain.handle("search-password", PasswordController.search);

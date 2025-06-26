@@ -9,6 +9,8 @@ import Input from "../components/Input";
 import { Formik } from "formik";
 
 import { IoIosRefresh } from "react-icons/io";
+import { getItem } from "../utils/function";
+import { ipcRenderer } from "electron";
 
 export function RegisterPassword() {
   const navigate = useNavigate();
@@ -111,6 +113,13 @@ export function RegisterPassword() {
     setPassword(randomPassword);
   };
 
+  const createPassword = async (values)=>{
+       const user = getItem({str:"user"})
+       values.UserId = user.id
+        let res = await ipcRenderer.invoke('create-password', values)
+        res = JSON.parse(res)
+  }
+
   return (
     <div
       style={{
@@ -157,14 +166,7 @@ export function RegisterPassword() {
           //   }
           //   return errors;
           // }}
-          onSubmit={(values, { setSubmitting }) => {
-            if (password != "") values.password = password;
-            dispatch(registerPassword(values));
-            // setTimeout(() => {
-            //   alert(JSON.stringify(values, null, 2));
-            //   setSubmitting(false);
-            // }, 400);
-          }}
+          onSubmit={(values, { setSubmitting }) => createPassword(values)}
         >
           {({
             values,
