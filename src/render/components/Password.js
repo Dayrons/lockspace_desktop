@@ -25,9 +25,8 @@ export function Password({ password }) {
       UserId: user.id,
     };
     await ipcRenderer.invoke("delete-password", values);
-
-    const passwords = state.passwords.filter((password) => password.id != id)
-     dispatch(setPasswords(passwords))
+    const passwords = state.passwords.filter((password) => password.id != id);
+    dispatch(setPasswords(passwords));
   };
 
   return (
