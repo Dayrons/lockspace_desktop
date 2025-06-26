@@ -4,22 +4,30 @@ import { IoCopy } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import toast from "react-hot-toast";
+import { useSelector, useDispatch } from "react-redux";
+import { setPasswords } from "../context/slice/AppSlice";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { RiDraggable } from "react-icons/ri";
 import { getItem } from "../utils/function";
+import { ipcRenderer } from "electron";
 export function Password({ password }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: password.id,
     });
-
+  const dispatch = useDispatch();
+  const state = useSelector((state) => state.app);
   const deletePassword = async (id) => {
     const user = getItem({ str: "user" });
-    values.UserId = user.id;
-    values.id = id
-    let res = await ipcRenderer.invoke("delete-password", values);
-    res = JSON.parse(res);
+    const values = {
+      id,
+      UserId: user.id,
+    };
+    await ipcRenderer.invoke("delete-password", values);
+
+    const passwords = state.passwords.filter((password) => password.id != id)
+     dispatch(setPasswords(passwords))
   };
 
   return (
