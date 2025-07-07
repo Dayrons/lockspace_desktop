@@ -37,7 +37,6 @@ class PasswordController {
   }
   async delete(e, values){
     const password = await Password.destroy({ where: { id:values.id,UserId:values.UserId } })
-    console.log(password)
     return JSON.stringify({error:false, data:password});
 
   }

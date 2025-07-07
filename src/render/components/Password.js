@@ -29,6 +29,7 @@ export function Password({ password }) {
     dispatch(setPasswords(passwords));
   };
 
+  console.log("password", password);
   return (
     <div
       style={{
@@ -80,12 +81,12 @@ export function Password({ password }) {
           alignItems: "center",
         }}
       >
-        <CopyToClipboard text={password.password}>
+        <CopyToClipboard text={password.password} onCopy={() => toast.success("Contraseña copiada")}>
           <IconButton
             size="small"
-            onClick={(e) => {
-              toast.success("Contraseña copiada");
-            }}
+            // onClick={() => {
+            //   ;
+            // }}
           >
             <IoCopy color="#2CDA9D" />
           </IconButton>

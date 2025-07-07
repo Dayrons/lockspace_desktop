@@ -7,10 +7,11 @@ import { registerPassword } from "../context/slice/AppSlice";
 import Switch from "@mui/material/Switch";
 import Input from "../components/Input";
 import { Formik } from "formik";
-
+import toast, { Toaster } from "react-hot-toast";
 import { IoIosRefresh } from "react-icons/io";
 import { getItem } from "../utils/function";
 import { ipcRenderer } from "electron";
+import { Slider } from "@mui/material";
 
 export function RegisterPassword() {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export function RegisterPassword() {
   const [isSpecialCharacter, setIsSpecialCharacter] = useState(false);
 
   const generatePassword = () => {
-    let characters = [
+    let lower = [
       "a",
       "b",
       "c",
@@ -50,8 +51,7 @@ export function RegisterPassword() {
       "y",
       "z",
     ];
-
-    const capital = [
+    let capital = [
       "A",
       "B",
       "C",
@@ -79,7 +79,7 @@ export function RegisterPassword() {
       "Y",
       "Z",
     ];
-    const Specialcharacters = [
+    let special = [
       "!",
       "@",
       "#",
@@ -96,29 +96,55 @@ export function RegisterPassword() {
       "[",
       "]",
     ];
-    const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+    let numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
 
-    if (isNumber) characters = characters.concat(numbers);
-    if (isCapital) characters = characters.concat(capital);
-    if (isSpecialCharacter) characters = characters.concat(Specialcharacters);
+    let allChars = [...lower];
+    let mustInclude = [];
 
-    let randomPassword = "";
-
-    // Validar que si se estan en check alguna de las opciones que minimo tenga uno de los caracteres indicados
-    for (var i = 0; i < 12; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      randomPassword += characters[randomIndex];
+    if (isNumber) {
+      allChars = allChars.concat(numbers);
+      mustInclude.push(numbers[Math.floor(Math.random() * numbers.length)]);
+    }
+    if (isCapital) {
+      allChars = allChars.concat(capital);
+      mustInclude.push(capital[Math.floor(Math.random() * capital.length)]);
+    }
+    if (isSpecialCharacter) {
+      allChars = allChars.concat(special);
+      mustInclude.push(special[Math.floor(Math.random() * special.length)]);
     }
 
-    setPassword(randomPassword);
+    // Always include at least one of each selected type
+    let randomPasswordArr = [...mustInclude];
+
+    // Fill the rest
+    let length = passwordLength || 12;
+    for (let i = randomPasswordArr.length; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * allChars.length);
+      randomPasswordArr.push(allChars[randomIndex]);
+    }
+
+    // Shuffle to avoid predictable placement of mustInclude chars
+    for (let i = randomPasswordArr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [randomPasswordArr[i], randomPasswordArr[j]] = [
+        randomPasswordArr[j],
+        randomPasswordArr[i],
+      ];
+    }
+
+    setPassword(randomPasswordArr.join(""));
   };
 
-  const createPassword = async (values)=>{
-       const user = getItem({str:"user"})
-       values.UserId = user.id
-        let res = await ipcRenderer.invoke('create-password', values)
-        res = JSON.parse(res)
-  }
+  const createPassword = async (values) => {
+    values.password = password != "" ? password : values.password;
+    const user = getItem({ str: "user" });
+    values.UserId = user.id;
+    let res = await ipcRenderer.invoke("create-password", values);
+    res = JSON.parse(res);
+  };
+
+  const [passwordLength, setPasswordLength] = useState(8);
 
   return (
     <div
@@ -131,6 +157,8 @@ export function RegisterPassword() {
         height: "100vh",
       }}
     >
+      <Toaster />
+
       <div
         style={{
           position: "absolute",
@@ -147,26 +175,21 @@ export function RegisterPassword() {
         style={{
           background: "rgba(43, 46, 61)",
           height: "80vh",
-          width: "50%",
+          width: "80%",
           boxSizing: "border-box",
-          padding: "20px 80px",
+          padding: "20px",
           borderRadius: "10px",
         }}
       >
         <Formik
           initialValues={{ title: "", password: "" }}
-          // validate={(values) => {
-          //   const errors = {};
-          //   if (!values.email) {
-          //     errors.email = "Required";
-          //   } else if (
-          //     !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-          //   ) {
-          //     errors.email = "Invalid email address";
-          //   }
-          //   return errors;
-          // }}
-          onSubmit={(values, { setSubmitting }) => createPassword(values)}
+          onSubmit={(values, { setSubmitting, resetForm }) => {
+            createPassword(values);
+            password != "" && setPassword("");
+            toast.success("Contraseña registrada correctamente");
+
+            resetForm();
+          }}
         >
           {({
             values,
@@ -176,7 +199,6 @@ export function RegisterPassword() {
             handleBlur,
             handleSubmit,
             isSubmitting,
-            /* and other goodies */
           }) => (
             <form
               onSubmit={handleSubmit}
@@ -208,7 +230,6 @@ export function RegisterPassword() {
                 />
                 <Input
                   title="Contraseña"
-                  // inputType="password"
                   onChange={(e) => {
                     setPassword("");
                     handleChange(e);
@@ -218,40 +239,137 @@ export function RegisterPassword() {
                 />
               </div>
 
-              <div>
-                <div>
-                  <h4 style={{ margin: "5px 0" }}>Caracteres especiales</h4>
-                  <Switch
-                    name="special_character"
-                    color="default"
-                    checked={isSpecialCharacter}
-                    onChange={(e) => {
-                      setIsSpecialCharacter(e.target.checked);
-                    }}
-                  />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "start",
+                  alignItems: "flex-start",
+                  alignContent: "flex-start",
+                  boxSizing: "border-box",
+                  padding: "20px",
+                  width: "50%",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
+                >
+                  <div>
+                    <h5 style={{ margin: "5px 0" }}>Mayuscula</h5>
+                    <Switch
+                      name="capital"
+                      checked={isCapital}
+                      onChange={(e) => {
+                        setIsCapital(e.target.checked);
+                      }}
+                      sx={{
+                        "& .MuiSwitch-switchBase.Mui-checked": {
+                          color: "rgba(44, 218, 157, 1)",
+                        },
+                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                          {
+                            backgroundColor: "rgba(44, 218, 157, 1)",
+                          },
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <h5 style={{ margin: "5px 0" }}>Simbolos</h5>
+                    <Switch
+                      name="special_character"
+                      checked={isSpecialCharacter}
+                      onChange={(e) => {
+                        setIsSpecialCharacter(e.target.checked);
+                      }}
+                      sx={{
+                        "& .MuiSwitch-switchBase.Mui-checked": {
+                          color: "rgba(44, 218, 157, 1)",
+                        },
+                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                          {
+                            backgroundColor: "rgba(44, 218, 157, 1)",
+                          },
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <h5 style={{ margin: "5px 0" }}>Numeros</h5>
+                    <Switch
+                      name="number"
+                      checked={isNumber}
+                      onChange={(e) => {
+                        setIsNumber(e.target.checked);
+                      }}
+                      sx={{
+                        "& .MuiSwitch-switchBase.Mui-checked": {
+                          color: "rgba(44, 218, 157, 1)",
+                        },
+                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track":
+                          {
+                            backgroundColor: "rgba(44, 218, 157, 1)",
+                          },
+                      }}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <h4 style={{ margin: "5px 0" }}>Mayuscula</h4>
-                  <Switch
-                    name="capital"
-                    color="default"
-                    checked={isCapital}
-                    onChange={(e) => {
-                      setIsCapital(e.target.checked);
+
+                <div style={{ width: "100%" }}>
+                  <h5 style={{ margin: "5px 0" }}>Longitud de la contraseña</h5>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      width: "100%",
                     }}
-                  />
-                </div>{" "}
-                <div>
-                  <h4 style={{ margin: "5px 0" }}>Numeros</h4>
-                  <Switch
-                    name="number"
-                    color="default"
-                    checked={isNumber}
-                    onChange={(e) => {
-                      setIsNumber(e.target.checked);
-                    }}
-                  />
+                  >
+                    <Slider
+                      min={4}
+                      max={32}
+                      value={passwordLength}
+                      onChange={(e, value) => setPasswordLength(value)}
+                      aria-label="Default"
+                      valueLabelDisplay="auto"
+                      sx={{
+                        color: "rgba(44, 218, 157, 1)",
+                        "& .MuiSlider-thumb": {
+                          backgroundColor: "rgba(44, 218, 157, 1)",
+                        },
+                        "& .MuiSlider-rail": {
+                          backgroundColor: "rgba(44, 218, 157, 0.2)",
+                        },
+                        "& .MuiSlider-track": {
+                          backgroundColor: "rgba(44, 218, 157, 1)",
+                        },
+                      }}
+                    />
+                    <input
+                      type="number"
+                      name="passwordLength"
+                      min={passwordLength}
+                      value={passwordLength}
+                      onChange={(e) => setPasswordLength(e.target.value)}
+                      style={{
+                        textAlign: "center",
+                        color: "white",
+                        height: "30px",
+                        width: "25%",
+                        boxSizing: "border-box",
+                        borderRadius: "5px",
+                        marginLeft: "10px",
+                        // padding: "20px",
+                        background: "#1c1d22",
+                        border: "none",
+                        outline: "none",
+                      }}
+                    />
+                  </div>
                 </div>
+
                 <div
                   style={{
                     height: "30px",
@@ -287,7 +405,7 @@ export function RegisterPassword() {
                   justifyContent: "center",
                   alignItems: "center",
                   cursor: "pointer",
-                  fontWeight:"bold"
+                  fontWeight: "bold",
                 }}
                 type="submit"
               >

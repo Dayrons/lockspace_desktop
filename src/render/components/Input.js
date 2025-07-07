@@ -3,7 +3,7 @@ import React from 'react'
 export default function Input({style,onKeyUp,title,styleText,inputType ="text", value="", name="", id="", onChange=()=>{}}) {
   return (
    <div>
-    <h3 style={{margin:0, marginBottom:"10px",styleText}}>{title}</h3>
+    <h4 style={{margin:0, marginBottom:"10px",styleText}}>{title}</h4>
      <input
             type={inputType}
             onKeyUp={onKeyUp}
