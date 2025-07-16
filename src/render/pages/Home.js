@@ -1,5 +1,5 @@
 const { ipcRenderer } = require("electron");
-import { Button } from "@mui/material";
+import { Box, Button, Modal } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,6 +16,7 @@ export function Home() {
   const navigate = useNavigate();
   const [value, setvalue] = useState("");
   const [loading, setloading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(async () => {
     if (false) {
@@ -27,13 +28,12 @@ export function Home() {
     }
   }, []);
 
-  ipcRenderer.on("redirect", async (e, _) => {
-    const res = await ipcRenderer.invoke("get-file");
+  ipcRenderer.on("show-modal-password", (e, data) => {
+    setOpen(true);
+  });
 
-    if (res != null) {
-      dispatch(setPasswords(res));
-      navigate("/page-password");
-    }
+  ipcRenderer.on("redirect", async (e, _) => {
+    await ipcRenderer.invoke("get-file");
   });
 
   return (
@@ -48,6 +48,142 @@ export function Home() {
           width: "100%",
         }}
       >
+        <Modal
+          open={open}
+          onClose={() => setOpen(false)}
+          disablePortal
+          disableEnforceFocus
+          disableAutoFocus
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            border: "none",
+            outline: "none",
+          }}
+        >
+          <Formik
+            initialValues={{
+              password: "",
+            }}
+            onSubmit={async (values) => {
+              let res = await ipcRenderer.invoke(
+                "validate-file-password",
+                values
+              );
+              res = JSON.parse(res);
+              if (res.error) {
+                toast.error(res.message);
+              } else {
+                dispatch(setUser(res.data));
+                toast.success("logeado");
+                navigate("/page-password");
+              }
+            }}
+          >
+            {({
+              values,
+              handleSubmit,
+              touched,
+              errors,
+              handleChange,
+              handleBlur,
+            }) => (
+              <form
+                onSubmit={handleSubmit}
+                style={{
+                  width: "400px",
+                  height: "300px",
+                  boxSizing: "border-box",
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#1c1d22",
+                  borderRadius: "10px",
+                  // position: "absolute",
+                  // top: "50%",
+                  // left: "50%",
+                  // transform: "translate(-50%, -50%)",
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Contraseña"
+                  name="password"
+                  value={values.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  style={{
+                    color: "black",
+                    height: "30px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    borderRadius: "5px",
+                    padding: "20px",
+                    background: "white",
+                    border: "none",
+                    outline: "none",
+                    marginBottom: "20px",
+                  }}
+                />
+                <div>
+                  <Checkbox
+                    defaultChecked
+                    color="success"
+                    sx={{
+                      color: '"rgba(44, 218, 157, 1)"',
+                      "&.Mui-checked": {
+                        color: "rgba(44, 218, 157, 1)",
+                      },
+                      "&.Mui-disabled": {
+                        color: "grey",
+                      },
+                    }}
+                  />
+                  <span>Recuerdame</span>
+                </div>
+
+                {loading ? (
+                  <div
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <CircularProgress sx={{ color: "rgba(44, 218, 157, 1)" }} />
+                  </div>
+                ) : (
+                  <button
+                    style={{
+                      height: "40px",
+                      width: "100%",
+                      borderRadius: "5px",
+                      border: "none",
+                      marginTop: "10px",
+                      padding: "10px",
+                      background: "rgba(44, 218, 157, 1)",
+                      display: "flex",
+                      color: "white",
+                      fontSize: "16px",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                    }}
+                    type="submit"
+                  >
+                    Validar contraseña
+                  </button>
+                )}
+              </form>
+            )}
+          </Formik>
+        </Modal>
         <div
           style={{
             width: "60%",
@@ -71,7 +207,7 @@ export function Home() {
               password: "",
             }}
             onSubmit={async (values) => {
-              setloading(true)
+              setloading(true);
               let res = await ipcRenderer.invoke("singin", values);
               res = JSON.parse(res);
               if (res.error) {
@@ -81,8 +217,7 @@ export function Home() {
                 toast.success("logeado");
                 navigate("/page-password");
               }
-              setloading(false)
-
+              setloading(false);
             }}
           >
             {({

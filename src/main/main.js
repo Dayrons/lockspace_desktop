@@ -6,16 +6,22 @@ const fs = require("fs");
 const FtpSrv = require("ftp-srv");
 var jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
-const crypto = require('crypto');
+const crypto = require("crypto");
 const PasswordController = require("./controllers/PasswordController");
 const AuthController = require("./controllers/AuthController");
 const fernet = require("fernet");
 const { Password } = require("./models/Password");
+const { User } = require("./models/User");
 const { machineId } = require("node-machine-id");
+const bcrypt = require("bcrypt");
 let window;
 
+let dataResponse;
+let globalUser;
+
 let macAddress;
-const uuid = 'password'; 
+
+const uuid = "password";
 
 const root = path.join(__dirname, "../../");
 function mainWindow() {
@@ -54,6 +60,8 @@ ipcMain.handle("search-password", PasswordController.search);
 ipcMain.on("start-server", initFtpServer);
 
 ipcMain.handle("get-file", getFile);
+
+ipcMain.handle("validate-file-password", registerPassword);
 
 function getHostname(e, _) {
   const nets = networkInterfaces();
@@ -117,7 +125,6 @@ function initFtpServer(e, _) {
     "login",
     ({ connection, username, password }, resolve, reject) => {
       connection.on("STOR", async (error, file) => {
-        
         window.webContents.send("redirect");
       });
 
@@ -148,6 +155,70 @@ function initFtpServer(e, _) {
   });
 }
 
+async function registerPassword(e, values) {
+  const validatePassword = await bcrypt.compare(
+    values.password,
+    globalUser.password
+  );
+
+  if (validatePassword) {
+    let buffer = Buffer.from(dataResponse.uuid, "utf8");
+
+    let uuid = buffer.toString("base64");
+
+    let passwords = dataResponse.passwords;
+
+    let secret = new fernet.Secret(uuid);
+
+    const newPasswords = [];
+    for (let i = 0; i < passwords.length; i++) {
+      const password = passwords[i];
+
+      const decryptedPassword = new fernet.Token({
+        secret: secret,
+        token: password.password,
+        ttl: 0,
+      });
+
+      password.password = decryptedPassword.decode();
+
+      const hardwareId = await machineId();
+
+      const hash = crypto.createHash("sha256");
+      hash.update(hardwareId);
+      const derivedKeyBytes = hash.digest(); // Esto es un Buffer de 32 bytes
+
+      const fernetKeyBase64 = derivedKeyBytes.toString("base64"); // 'base64url' es ideal
+
+      secret = new fernet.Secret(fernetKeyBase64);
+
+      const token = new fernet.Token({ secret: secret });
+
+      password.password = token.encode(password.password);
+
+      password.UserId = globalUser.id;
+
+      password.externalId = password.id;
+
+      const { id, ...newPassword } = password;
+      newPasswords.push(newPassword);
+    }
+
+    await Password.bulkCreate(newPasswords, { ignoreDuplicates: true });
+
+    return JSON.stringify({
+      error: false,
+      message: "Registrado correctamente",
+      data: globalUser,
+    });
+  }
+
+  return JSON.stringify({
+    error: true,
+    message: "Contraseña invalida",
+  });
+}
+
 async function getFile(e, _) {
   const file = path.join(root, "data.txt");
   const exist = fs.existsSync(file);
@@ -156,48 +227,30 @@ async function getFile(e, _) {
     const data = fs.readFileSync(file, "utf-8");
     fs.unlinkSync(file);
 
-    let dataResponse = JSON.parse(data);
+    dataResponse = JSON.parse(data);
 
-    const buffer = Buffer.from(dataResponse.uuid, "utf8");
-    const uuid = buffer.toString("base64");
-   
-
-    let passwords = dataResponse.passwords;
-
-    passwords = passwords.map(async (password) => {
-       let secret = new fernet.Secret(uuid);
-      const decryptedPassword = new fernet.Token({
-        secret: secret,
-        token: password.password,
-        ttl: 0,
-      });
-      password.password = decryptedPassword.decode();
-
-      const newSecret = await machineId();
-
-      secret = new fernet.Secret(newSecret);
-
-      const token = new fernet.Token({ secret: secret });
-
-      console.log(`Password ${password}`);
-
-      // await Password.create({
-      //   externalId: password.id,
-      //   title: password.title,
-      //   password: token.encode(password.password),
-      //   expiration: password.expiration,
-      //   expirationUnit: password.expirationUnit,
-      //   createdAt: password.createdAt,
-      //   updatedAt: password.updatedAt,
-      // });
-
-      return password;
+    const [user, _] = await User.findOrCreate({
+      where: { externalId: dataResponse.user.id },
+      defaults: {
+        name: dataResponse.user.name.toLowerCase(),
+        password: dataResponse.user.password,
+        externalId :dataResponse.user.id 
+      },
     });
 
-    return null;
+    globalUser = user;
+    window.webContents.send("show-modal-password");
+
+    return {
+      error: false,
+      message: "File found",
+    };
   }
 
-  return null;
+  return {
+    error: true,
+    message: "No file found",
+  };
 }
 
 module.exports = {

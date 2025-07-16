@@ -1,29 +1,31 @@
-const { DataTypes } =require('sequelize');
-const {sequelize} =require('../config/db');
-const { Password } = require('./Password');
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/db");
+const { Password } = require("./Password");
 
+const User = sequelize.define(
+  "User",
+  {
 
-
-
-const User = sequelize.define('User',{   
-    name:{
-       type: DataTypes.CHAR,
-       allowNull: false,
-
+    name: {
+      type: DataTypes.CHAR,
+      allowNull: false,
+    },
+      externalId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      unique: true,
     },
     password: {
-        type: DataTypes.TEXT,
-        allowNull: false
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
-    
-
-  },{
-    timestamps: true
-} );
+  },
+  {
+    timestamps: true,
+  }
+);
 
 User.hasMany(Password);
 Password.belongsTo(User);
 
-
-
-module.exports = {User}
+module.exports = { User };
