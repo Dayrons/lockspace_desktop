@@ -186,7 +186,7 @@ export function Home() {
         </Modal>
         <div
           style={{
-            width: "60%",
+            width: "50%",
             height: "100%",
             boxSizing: "border-box",
             padding: "0 20px",
@@ -341,7 +341,7 @@ export function Home() {
         </div>
         <div
           style={{
-            width: "40%",
+            width: "50%",
             height: "100%",
             display: "flex",
             justifyContent: "center",
@@ -353,10 +353,10 @@ export function Home() {
           ) : (
             <div
               style={{
-                width: "230px",
-                height: "230px",
+                width: "280px",
+                height: "280px",
                 boxSizing: "border-box",
-                padding: "20px",
+                padding: "25px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -365,7 +365,7 @@ export function Home() {
                 borderRadius: "10px",
               }}
             >
-              <QRCode value={value} size={230} />
+              <QRCode value={value} size={280} />
             </div>
           )}
         </div>
