@@ -228,13 +228,13 @@ async function getFile(e, _) {
     fs.unlinkSync(file);
 
     dataResponse = JSON.parse(data);
-
     const [user, _] = await User.findOrCreate({
-      where: { externalId: dataResponse.user.id },
+      where: { uuid: dataResponse.user.uuid },
       defaults: {
         name: dataResponse.user.name.toLowerCase(),
         password: dataResponse.user.password,
-        externalId :dataResponse.user.id 
+        externalId :dataResponse.user.id,
+        uuid:dataResponse.user.uuid
       },
     });
 

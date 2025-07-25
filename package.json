@@ -91,6 +91,7 @@
     "socket.io-client": "^4.4.0",
     "sqlite3": "^5.1.7",
     "sweetalert2": "^11.1.9",
-    "swiper": "^7.3.1"
+    "swiper": "^7.3.1",
+    "uuid": "^11.1.0"
   }
 }

@@ -5,15 +5,20 @@ const { Password } = require("./Password");
 const User = sequelize.define(
   "User",
   {
-
+    uuid:{
+      type: DataTypes.CHAR,
+      allowNull: false,
+      unique: true,
+    },
     name: {
       type: DataTypes.CHAR,
       allowNull: false,
+      unique: true,
+      
     },
       externalId: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      unique: true,
     },
     password: {
       type: DataTypes.TEXT,
