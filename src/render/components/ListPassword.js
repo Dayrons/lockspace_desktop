@@ -70,6 +70,7 @@ export function ListPassword() {
   }
 
 
+  console.log("RENDER LIST PASSWORDS", state.passwords)
   return (
     <>
       <Toaster />

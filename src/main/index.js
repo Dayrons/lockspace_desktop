@@ -8,6 +8,5 @@ app.whenReady().then(mainWindow)
 
 
 async function init(){
-    // Con sqlite esto borra las relacciones
     await sequelize.sync({ alter: true,force:true});
 }

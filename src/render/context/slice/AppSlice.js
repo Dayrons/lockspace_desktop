@@ -32,8 +32,8 @@ export const appSlice = createSlice({
     },
 
     clearPasswords: (state, action) => {
-      state.passwords = null;
-      localStorage.removeItem("passwords");
+      state.passwords = [];
+
     },
 
     registerPassword: async (state, action) => {

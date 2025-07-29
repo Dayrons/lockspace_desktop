@@ -8,7 +8,11 @@ const Password = sequelize.define("Password", {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-
+   uuid:{
+      type: DataTypes.CHAR,
+      allowNull: false,
+      unique: true,
+    },
   title: {
     type: DataTypes.CHAR,
     allowNull: false,

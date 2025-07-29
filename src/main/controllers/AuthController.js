@@ -10,11 +10,7 @@ class AuthController {
       },
       // include: [Password]
     });
-    //    await Password.create({
-    //         title:"Prueba",
-    //         password:"12345678",
-    //         UserId :user.id
-    //     })
+  
 
     if (user !== null) {
       const validatePassword = await bcrypt.compare(

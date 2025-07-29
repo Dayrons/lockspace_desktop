@@ -28,8 +28,6 @@ export function Password({ password }) {
     const passwords = state.passwords.filter((password) => password.id != id);
     dispatch(setPasswords(passwords));
   };
-
-  console.log("password", password);
   return (
     <div
       style={{
