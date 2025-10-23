@@ -162,46 +162,50 @@ async function registerPassword(e, values) {
   );
 
   if (validatePassword) {
-    let buffer = Buffer.from(dataResponse.uuid, "utf8");
+    // Mimic Flutter logic: keyFernet = encrypt.Key.fromUtf8(keyString)
+    // In Node.js fernet, the key must be base64 encoded, so we encode the utf8 string to base64
+    let keyString = dataResponse.uuid;
+    let keyFernet = Buffer.from(keyString, "utf8").toString("base64");
+    let fernetSecret = new fernet.Secret(keyFernet);
+    // return encrypt.Encrypter(fernet) in Flutter, here we use fernet.Token with the secret
 
-    let uuid = buffer.toString("base64");
+    console.log("UUID BASE64:", keyFernet);
 
     let passwords = dataResponse.passwords;
 
-    let secret = new fernet.Secret(uuid);
-
     const newPasswords = [];
     for (let i = 0; i < passwords.length; i++) {
-      const password = passwords[i];
+      try {
+        const password = passwords[i];
 
-      const decryptedPassword = new fernet.Token({
-        secret: secret,
-        token: password.password,
-        ttl: 0,
-      });
+        // Decrypt with initial fernetSecret
+        const decryptedPassword = new fernet.Token({
+          secret: fernetSecret,
+          token: password.password,
+          ttl: 0,
+        });
 
-      password.password = decryptedPassword.decode();
+        password.password = decryptedPassword.decode();
 
-      const hardwareId = await machineId();
+        const hardwareId = await machineId();
 
-      const hash = crypto.createHash("sha256");
-      hash.update(hardwareId);
-      const derivedKeyBytes = hash.digest(); // Esto es un Buffer de 32 bytes
+        // Mimic: keyFernet = encrypt.Key.fromUtf8(hardwareId)
+        const derivedKeyBase64 = Buffer.from(hardwareId, "utf8").toString("base64");
+        const hardwareSecret = new fernet.Secret(derivedKeyBase64);
 
-      const fernetKeyBase64 = derivedKeyBytes.toString("base64"); // 'base64url' es ideal
+        // Encrypt with hardwareSecret
+        const token = new fernet.Token({ secret: hardwareSecret });
 
-      secret = new fernet.Secret(fernetKeyBase64);
+        password.password = token.encode(password.password);
 
-      const token = new fernet.Token({ secret: secret });
+        password.UserId = globalUser.id;
+        password.externalId = password.id;
 
-      password.password = token.encode(password.password);
-
-      password.UserId = globalUser.id;
-
-      password.externalId = password.id;
-
-      const { id, ...newPassword } = password;
-      newPasswords.push(newPassword);
+        const { id, ...newPassword } = password;
+        newPasswords.push(newPassword);
+      } catch (error) {
+        console.error("Error al decodificar:", error.message);
+      }
     }
 
     await Password.bulkCreate(newPasswords, { ignoreDuplicates: true });
@@ -233,8 +237,8 @@ async function getFile(e, _) {
       defaults: {
         name: dataResponse.user.name.toLowerCase(),
         password: dataResponse.user.password,
-        externalId :dataResponse.user.id,
-        uuid:dataResponse.user.uuid
+        externalId: dataResponse.user.id,
+        uuid: dataResponse.user.uuid,
       },
     });
 
