@@ -58,6 +58,29 @@ class PasswordController {
     });
     return JSON.stringify({ error: false, data: password });
   }
+
+  async decryptPassword(e, password) {
+    const hardwareId = await machineId();
+
+    const hash = crypto.createHash("sha256");
+    hash.update(hardwareId);
+    const derivedKeyBytes = hash.digest();
+
+    const fernetKeyBase64 = derivedKeyBytes.toString("base64");
+
+    const secret = new fernet.Secret(fernetKeyBase64);
+
+    const token = new fernet.Token({ secret: secret, token: password, ttl: 0 });
+
+    try {
+
+      const decryptedPassword = token.decode();
+      return JSON.stringify({ error: false, data: decryptedPassword });
+
+    } catch (error) {
+      return JSON.stringify({ error: true, message: "Error al desencriptar la contraseña" });
+    }
+  }
 }
 
 module.exports = new PasswordController();

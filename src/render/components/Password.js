@@ -18,6 +18,7 @@ export function Password({ password }) {
     });
   const dispatch = useDispatch();
   const state = useSelector((state) => state.app);
+
   const deletePassword = async (id) => {
     const user = getItem({ str: "user" });
     const values = {
@@ -28,6 +29,26 @@ export function Password({ password }) {
     const passwords = state.passwords.filter((password) => password.id != id);
     dispatch(setPasswords(passwords));
   };
+
+
+  const decryptPassword = async (password) => {
+    
+    let res = await ipcRenderer.invoke("decrypt-password", password);
+     res = JSON.parse(res)
+
+    if (!res.error) {
+      const passwordDecrypted = res.data;
+      navigator.clipboard.writeText(passwordDecrypted);
+      toast.success("Contraseña desencriptada correctamente");
+     
+    } else {
+      toast.error("Error al desencriptar la contraseña");
+    }
+  
+  }
+
+
+
   return (
     <div
       style={{
@@ -79,16 +100,16 @@ export function Password({ password }) {
           alignItems: "center",
         }}
       >
-        <CopyToClipboard text={password.password} onCopy={() => toast.success("Contraseña copiada")}>
+      
           <IconButton
             size="small"
-            // onClick={() => {
-            //   ;
-            // }}
+            onClick={() => {
+              decryptPassword(password.password);
+            }}
           >
             <IoCopy color="#2CDA9D" />
           </IconButton>
-        </CopyToClipboard>
+       
 
         <IconButton
           size="small"

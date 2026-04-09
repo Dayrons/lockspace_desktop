@@ -56,6 +56,7 @@ ipcMain.handle("delete-password", PasswordController.delete);
 ipcMain.handle("create-password", PasswordController.create);
 ipcMain.handle("get-password", PasswordController.get);
 ipcMain.handle("search-password", PasswordController.search);
+ipcMain.handle("decrypt-password", PasswordController.decryptPassword);
 
 ipcMain.on("start-server", initFtpServer);
 
@@ -162,64 +163,109 @@ async function registerPassword(e, values) {
   );
 
   if (validatePassword) {
-    // Mimic Flutter logic: keyFernet = encrypt.Key.fromUtf8(keyString)
-    // In Node.js fernet, the key must be base64 encoded, so we encode the utf8 string to base64
+    // 1. Preparar la clave de la App Móvil (Decodificación)
+    console.log("dataResponse completo (teclas):", Object.keys(dataResponse));
+    if (dataResponse.user) {
+      console.log("dataResponse.user completo:", JSON.stringify(dataResponse.user, null, 2));
+    }
+
     let keyString = dataResponse.uuid;
-    let keyFernet = Buffer.from(keyString, "utf8").toString("base64");
-    let fernetSecret = new fernet.Secret(keyFernet);
-    // return encrypt.Encrypter(fernet) in Flutter, here we use fernet.Token with the secret
+    
+    if (!keyString) {
+      return JSON.stringify({ error: true, message: "No se encontró el identificador de sincronización" });
+    }
 
-    console.log("UUID BASE64:", keyFernet);
+    console.log("keyString inicial:", keyString);
 
+    // Preparar posibles claves
+    const possibleSecrets = [];
+    
+    // Variación 1: SHA256 del UUID (32 bytes) - Lo que intentamos al principio
+    const hash256 = crypto.createHash("sha256").update(keyString).digest("base64");
+    possibleSecrets.push({
+      name: "SHA256 del UUID",
+      secret: new fernet.Secret(hash256)
+    });
+
+    // Variación 2: UUID sin guiones (32 chars -> 32 bytes UTF-8)
+    const cleanKey32 = keyString.replace(/-/g, "");
+    if (cleanKey32.length === 32) {
+      possibleSecrets.push({
+        name: "UUID sin guiones (32 bytes UTF-8)",
+        secret: new fernet.Secret(Buffer.from(cleanKey32).toString("base64"))
+      });
+    }
+
+    // Variación 3: UUID original truncado/paddeado a 32 (32 bytes UTF-8)
+    let fixedKey32 = keyString.substring(0, 32).padEnd(32, "0");
+    possibleSecrets.push({
+      name: "UUID original truncado/pad (32 bytes UTF-8)",
+      secret: new fernet.Secret(Buffer.from(fixedKey32).toString("base64"))
+    });
+
+    // 2. Preparar la clave de la App Desktop (Re-encriptación local)
+    const hardwareId = await machineId();
+    const hashHardware = crypto.createHash("sha256");
+    hashHardware.update(hardwareId);
+    const hardwareSecret = new fernet.Secret(hashHardware.digest().toString("base64"));
+
+    console.log("Sincronizando contraseñas...");
     let passwords = dataResponse.passwords;
-
     const newPasswords = [];
+
     for (let i = 0; i < passwords.length; i++) {
-      try {
-        const password = passwords[i];
+      const password = passwords[i];
+      console.log(`Procesando contraseña: ${password.title}`);
+      
+      let decryptedText = null;
+      let usedSecretName = "";
 
-        // Decrypt with initial fernetSecret
-        const decryptedPassword = new fernet.Token({
-          secret: fernetSecret,
-          token: password.password,
-          ttl: 0,
-        });
+      // Probar cada secreto hasta que uno funcione
+      for (const attempt of possibleSecrets) {
+        try {
+          const token = new fernet.Token({
+            secret: attempt.secret,
+            token: password.password,
+            ttl: 0,
+          });
+          decryptedText = token.decode();
+          if (decryptedText) {
+            usedSecretName = attempt.name;
+            break; 
+          }
+        } catch (e) {
+          // Continuar con el siguiente intento
+        }
+      }
 
-        password.password = decryptedPassword.decode();
-
-        const hardwareId = await machineId();
-
-        // Mimic: keyFernet = encrypt.Key.fromUtf8(hardwareId)
-        const derivedKeyBase64 = Buffer.from(hardwareId, "utf8").toString("base64");
-        const hardwareSecret = new fernet.Secret(derivedKeyBase64);
-
-        // Encrypt with hardwareSecret
-        const token = new fernet.Token({ secret: hardwareSecret });
-
-        password.password = token.encode(password.password);
-
+      if (decryptedText) {
+        console.log(`Desencriptado exitoso para: ${password.title} usando ${usedSecretName}`);
+        console.log(`Texto desencriptado: ${decryptedText}`);
+        const tokenDesktop = new fernet.Token({ secret: hardwareSecret });
+        password.password = tokenDesktop.encode(decryptedText);
         password.UserId = globalUser.id;
         password.externalId = password.id;
-
         const { id, ...newPassword } = password;
         newPasswords.push(newPassword);
-      } catch (error) {
-        console.error("Error al decodificar:", error.message);
+      } else {
+        console.error(`Error: No se pudo desencriptar "${password.title}" con ninguna de las ${possibleSecrets.length} claves probadas.`);
       }
     }
 
-    await Password.bulkCreate(newPasswords, { ignoreDuplicates: true });
+    if (newPasswords.length > 0) {
+      await Password.bulkCreate(newPasswords, { ignoreDuplicates: true });
+    }
 
     return JSON.stringify({
       error: false,
-      message: "Registrado correctamente",
+      message: "Sincronización completada correctamente",
       data: globalUser,
     });
   }
 
   return JSON.stringify({
     error: true,
-    message: "Contraseña invalida",
+    message: "Contraseña de acceso inválida",
   });
 }
 
