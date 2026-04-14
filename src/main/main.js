@@ -164,91 +164,52 @@ async function registerPassword(e, values) {
 
   if (validatePassword) {
     // 1. Preparar la clave de la App Móvil (Decodificación)
-    console.log("dataResponse completo (teclas):", Object.keys(dataResponse));
-    if (dataResponse.user) {
-      console.log("dataResponse.user completo:", JSON.stringify(dataResponse.user, null, 2));
-    }
-
-    let keyString = dataResponse.uuid;
-    
+    // El dispositivo móvil usa el UUID como clave. Al ser un UUID (36 chars),
+    // se usan los 32 caracteres resultantes de eliminar los guiones para obtener los 32 bytes que requiere Fernet.
+    const keyString = dataResponse.uuid;
     if (!keyString) {
       return JSON.stringify({ error: true, message: "No se encontró el identificador de sincronización" });
     }
 
-    console.log("keyString inicial:", keyString);
-
-    // Preparar posibles claves
-    const possibleSecrets = [];
-    
-    // Variación 1: SHA256 del UUID (32 bytes) - Lo que intentamos al principio
-    const hash256 = crypto.createHash("sha256").update(keyString).digest("base64");
-    possibleSecrets.push({
-      name: "SHA256 del UUID",
-      secret: new fernet.Secret(hash256)
-    });
-
-    // Variación 2: UUID sin guiones (32 chars -> 32 bytes UTF-8)
-    const cleanKey32 = keyString.replace(/-/g, "");
-    if (cleanKey32.length === 32) {
-      possibleSecrets.push({
-        name: "UUID sin guiones (32 bytes UTF-8)",
-        secret: new fernet.Secret(Buffer.from(cleanKey32).toString("base64"))
-      });
-    }
-
-    // Variación 3: UUID original truncado/paddeado a 32 (32 bytes UTF-8)
-    let fixedKey32 = keyString.substring(0, 32).padEnd(32, "0");
-    possibleSecrets.push({
-      name: "UUID original truncado/pad (32 bytes UTF-8)",
-      secret: new fernet.Secret(Buffer.from(fixedKey32).toString("base64"))
-    });
+    const cleanKey = keyString.replace(/-/g, "");
+    const fernetKeyBase64 = Buffer.from(cleanKey).toString("base64");
+    const fernetSecret = new fernet.Secret(fernetKeyBase64);
 
     // 2. Preparar la clave de la App Desktop (Re-encriptación local)
+    // Obtenemos el ID de hardware y aplicamos SHA256 para asegurar 32 bytes de clave
     const hardwareId = await machineId();
     const hashHardware = crypto.createHash("sha256");
     hashHardware.update(hardwareId);
     const hardwareSecret = new fernet.Secret(hashHardware.digest().toString("base64"));
 
-    console.log("Sincronizando contraseñas...");
-    let passwords = dataResponse.passwords;
+    const passwords = dataResponse.passwords;
     const newPasswords = [];
 
     for (let i = 0; i < passwords.length; i++) {
       const password = passwords[i];
-      console.log(`Procesando contraseña: ${password.title}`);
-      
-      let decryptedText = null;
-      let usedSecretName = "";
+      try {
+        // Decodificar el token que viene de la app móvil
+        const tokenMobile = new fernet.Token({
+          secret: fernetSecret,
+          token: password.password,
+          ttl: 0,
+        });
 
-      // Probar cada secreto hasta que uno funcione
-      for (const attempt of possibleSecrets) {
-        try {
-          const token = new fernet.Token({
-            secret: attempt.secret,
-            token: password.password,
-            ttl: 0,
-          });
-          decryptedText = token.decode();
-          if (decryptedText) {
-            usedSecretName = attempt.name;
-            break; 
-          }
-        } catch (e) {
-          // Continuar con el siguiente intento
+        const decryptedText = tokenMobile.decode();
+
+        if (decryptedText) {
+          // Re-encriptar con la clave local del hardware del PC
+          const tokenDesktop = new fernet.Token({ secret: hardwareSecret });
+          password.password = tokenDesktop.encode(decryptedText);
+
+          password.UserId = globalUser.id;
+          password.externalId = password.id;
+
+          const { id, ...newPassword } = password;
+          newPasswords.push(newPassword);
         }
-      }
-
-      if (decryptedText) {
-        console.log(`Desencriptado exitoso para: ${password.title} usando ${usedSecretName}`);
-        console.log(`Texto desencriptado: ${decryptedText}`);
-        const tokenDesktop = new fernet.Token({ secret: hardwareSecret });
-        password.password = tokenDesktop.encode(decryptedText);
-        password.UserId = globalUser.id;
-        password.externalId = password.id;
-        const { id, ...newPassword } = password;
-        newPasswords.push(newPassword);
-      } else {
-        console.error(`Error: No se pudo desencriptar "${password.title}" con ninguna de las ${possibleSecrets.length} claves probadas.`);
+      } catch (error) {
+        console.error(`Error al procesar contraseña "${password.title}":`, error.message);
       }
     }
 
