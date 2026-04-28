@@ -1,6 +1,6 @@
 const { User } = require("../models/User");
 const { Password } = require("../models/Password");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require('uuid');
 class AuthController {
   async singin(e, values) {

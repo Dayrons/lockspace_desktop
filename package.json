@@ -1,7 +1,7 @@
 {
-  "name": "react-electron",
+  "name": "Lockspace",
   "version": "1.0.0",
-  "description": "",
+  "description": "Lockspace Desktop Application",
   "main": "src/main/index.js",
   "scripts": {
     "dev": "webpack --watch --mode development",
@@ -9,25 +9,53 @@
     "build": "webpack --mode production",
     "pack": "electron-builder --dir",
     "dist": "electron-builder --ia32",
+    "dist:linux": "electron-builder --linux",
+    "dist:ubuntu": "electron-builder --linux deb",
+    "dist:win": "electron-builder --win --x64",
     "postinstall": "install-app-deps"
   },
   "build": {
     "appId": "com.softplus.lockspace",
-    "files": [
-      "dist/**/*",
-      "src/main/**/*",
-      "node_modules/**/*",
-      "package.json"
-    ],
+    "productName": "Lockspace",
+    "npmRebuild": true,
+    "directories": {
+      "buildResources": "src/assets"
+    },
+    "win": {
+      "icon": "src/assets/logo.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Lockspace"
+    },
     "linux": {
+      "icon": "src/assets/logo.png",
       "target": [
         "AppImage",
         "deb"
       ]
-    }
+    },
+    "files": [
+      "dist/**/*",
+      "src/main/**/*",
+      "src/assets/**/*",
+       "node_modules/**/*",
+      "package.json"
+    ]
   },
   "keywords": [],
-  "author": "",
+  "author": "Softplus <info@softplus.com>",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.15.0",
@@ -59,7 +87,7 @@
     "@reduxjs/toolkit": "^1.9.7",
     "axios": "^0.24.0",
     "base-64": "^1.0.0",
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "bootstrap": "^5.1.3",
     "boxicons": "^2.0.9",
     "crypto-js": "^4.2.0",
