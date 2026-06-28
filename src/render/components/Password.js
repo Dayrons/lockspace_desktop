@@ -31,21 +31,31 @@ export function Password({ password }) {
   };
 
 
-  const decryptPassword = async (password) => {
-    
-    let res = await ipcRenderer.invoke("decrypt-password", password);
-     res = JSON.parse(res)
+  const userState = useSelector((state) => state.user);
+  const masterPassword = userState.masterPassword;
+  const userName = userState.user?.name;
+
+  const decryptPassword = async (encryptedPassword) => {
+    if (!masterPassword) {
+      toast.error("Debes iniciar sesión para desencriptar");
+      return;
+    }
+
+    let res = await ipcRenderer.invoke("decrypt-password", {
+      password: encryptedPassword,
+      userPassword: masterPassword,
+      userName: userName,
+    });
+    res = JSON.parse(res);
 
     if (!res.error) {
       const passwordDecrypted = res.data;
       navigator.clipboard.writeText(passwordDecrypted);
       toast.success("Contraseña desencriptada correctamente");
-     
     } else {
       toast.error("Error al desencriptar la contraseña");
     }
-  
-  }
+  };
 
 
 

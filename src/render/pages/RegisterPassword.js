@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import IconButton from "@mui/material/IconButton";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { registerPassword } from "../context/slice/AppSlice";
 import Switch from "@mui/material/Switch";
 import Input from "../components/Input";
@@ -16,6 +16,8 @@ import { Slider } from "@mui/material";
 export function RegisterPassword() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const userState = useSelector((state) => state.user);
+  const masterPassword = userState.masterPassword;
   const [password, setPassword] = useState("");
 
   const [isNumber, setIsNumber] = useState(false);
@@ -140,8 +142,20 @@ export function RegisterPassword() {
     values.password = password != "" ? password : values.password;
     const user = getItem({ str: "user" });
     values.UserId = user.id;
+    values.userName = user.name;
+    
+    // Usar la contraseña maestra de la sesión activa
+    if (!masterPassword) {
+      toast.error("Debes iniciar sesión para crear contraseñas");
+      return;
+    }
+    values.userPassword = masterPassword;
+    
     let res = await ipcRenderer.invoke("create-password", values);
     res = JSON.parse(res);
+    if (res.error) {
+      toast.error(res.message || "Error al crear contraseña");
+    }
   };
 
   const [passwordLength, setPasswordLength] = useState(8);

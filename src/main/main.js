@@ -5,15 +5,12 @@ const path = require("path");
 const fs = require("fs");
 const FtpSrv = require("ftp-srv");
 var jwt = require("jsonwebtoken");
-const CryptoJS = require("crypto-js");
 const crypto = require("crypto");
 const PasswordController = require("./controllers/PasswordController");
 const AuthController = require("./controllers/AuthController");
 const fernet = require("fernet");
 const { Password } = require("./models/Password");
 const { User } = require("./models/User");
-const { machineId } = require("node-machine-id");
-const bcrypt = require("bcryptjs");
 let window;
 let tray;
 
@@ -225,57 +222,43 @@ function initFtpServer(e, _) {
 
 async function registerPassword(e, values) {
   try {
-    const validatePassword = await bcrypt.compare(
-      values.password,
-      globalUser.password
-    );
+    logToFile(`registerPassword called with password length: ${values.password?.length}`);
+    logToFile(`globalUser: ${globalUser?.name}, stored hash: ${globalUser?.password?.substring(0, 30)}...`);
+    
+    // Verificar contraseña con HMAC-SHA256 (compatible con Flutter)
+    const computedHash = AuthController.hashPassword(values.password, globalUser.name);
+    logToFile(`computedHash: ${computedHash.substring(0, 30)}...`);
+    
+    const validatePassword = (computedHash === globalUser.password);
+    logToFile(`validatePassword: ${validatePassword}`);
 
     if (validatePassword) {
-      // 1. Preparar la clave de la App Móvil (Decodificación)
-      // El dispositivo móvil usa el UUID como clave. Al ser un UUID (36 chars),
-      // se usan los 32 caracteres resultantes de eliminar los guiones para obtener los 32 bytes que requiere Fernet.
-      const keyString = dataResponse.uuid;
-      if (!keyString) {
-        return JSON.stringify({ error: true, message: "No se encontró el identificador de sincronización" });
-      }
-
-      const cleanKey = keyString.replace(/-/g, "");
-      const fernetKeyBase64 = Buffer.from(cleanKey).toString("base64");
-      const fernetSecret = new fernet.Secret(fernetKeyBase64);
-
-      // 2. Preparar la clave de la App Desktop (Re-encriptación local)
-      // Obtenemos el ID de hardware y aplicamos SHA256 para asegurar 32 bytes de clave
-      const hardwareId = await machineId();
-      const hashHardware = crypto.createHash("sha256");
-      hashHardware.update(hardwareId);
-      const hardwareSecret = new fernet.Secret(hashHardware.digest().toString("base64"));
-
+      // Las contraseñas vienen encriptadas desde Flutter con PBKDF2(password, username)
+      // No necesitan ser desencriptadas ni re-encriptadas, solo almacenarlas tal cual.
+      
       const passwords = dataResponse.passwords;
       const newPasswords = [];
 
       for (let i = 0; i < passwords.length; i++) {
         const password = passwords[i];
         try {
-          // Decodificar el token que viene de la app móvil
-          const tokenMobile = new fernet.Token({
-            secret: fernetSecret,
-            token: password.password,
-            ttl: 0,
-          });
-
-          const decryptedText = tokenMobile.decode();
-
-          if (decryptedText) {
-            // Re-encriptar con la clave local del hardware del PC
-            const tokenDesktop = new fernet.Token({ secret: hardwareSecret });
-            password.password = tokenDesktop.encode(decryptedText);
-
-            password.UserId = globalUser.id;
-            password.externalId = password.id;
-
-            const { id, ...newPassword } = password;
-            newPasswords.push(newPassword);
+          const newPassword = {
+            uuid: password.uuid,
+            title: password.title,
+            password: password.password,
+            expiration: password.expiration || 0,
+            expirationUnit: password.expiration_unit || 'never',
+            UserId: globalUser.id,
+            externalId: password.id,
+          };
+          // Solo incluir fechas si son válidas
+          if (password.created_at) {
+            newPassword.createdAt = new Date(password.created_at);
           }
+          if (password.updated_at) {
+            newPassword.updatedAt = new Date(password.updated_at);
+          }
+          newPasswords.push(newPassword);
         } catch (error) {
           logToFile(`Error processing password "${password.title}": ${error.message}`);
         }
@@ -297,7 +280,7 @@ async function registerPassword(e, values) {
       message: "Contraseña de acceso inválida",
     });
   } catch (error) {
-    logToFile(`registerPassword error: ${error.message}`);
+    logToFile(`registerPassword error: ${error.message}\nStack: ${error.stack}`);
     return JSON.stringify({ error: true, message: "Error interno" });
   }
 }

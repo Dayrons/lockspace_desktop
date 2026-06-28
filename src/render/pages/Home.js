@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { useDispatch, useSelector } from "react-redux";
 import { setPasswords } from "../context/slice/AppSlice";
-import { setUser } from "../context/slice/UserSlice";
+import { setUser, setMasterPassword } from "../context/slice/UserSlice";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { Formik } from "formik";
@@ -76,7 +76,8 @@ export function Home() {
                 toast.error(res.message);
               } else {
                 dispatch(setUser(res.data));
-                toast.success("logeado");
+                dispatch(setMasterPassword(values.password));
+                toast.success("Sincronización exitosa");
                 navigate("/page-password");
               }
             }}
@@ -214,6 +215,7 @@ export function Home() {
                 toast.error(res.message);
               } else {
                 dispatch(setUser(res.data));
+                dispatch(setMasterPassword(values.password));
                 toast.success("logeado");
                 navigate("/page-password");
               }
