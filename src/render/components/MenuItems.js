@@ -1,9 +1,10 @@
 import React from 'react'
-import {  useSelector, useDispatch} from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { FiLogOut } from "react-icons/fi";
 import { IoQrCode } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { clearPasswords } from '../context/slice/AppSlice';
+import { clearMasterPassword, clearUser } from '../context/slice/UserSlice';
 export function MenuItems() {
 
   const navigate = useNavigate();
@@ -15,8 +16,9 @@ export function MenuItems() {
       title:"Cerra sesion",
       icon: <FiLogOut />,
       function:()=>{
-        console.log("click")
         dispatch(clearPasswords())
+        dispatch(clearMasterPassword())
+        dispatch(clearUser())
         navigate('/')
       }
     },

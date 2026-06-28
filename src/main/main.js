@@ -161,7 +161,10 @@ function getHostname(e, _) {
     host: ip,
   };
 
-  const secretKey = "1234";
+  // JWT secret generado aleatoriamente al iniciar la app.
+  // Cambia con cada inicio, así que tokens viejos no son válidos.
+  // Esto evita que alguien con acceso al código pueda falsificar QR.
+  const secretKey = crypto.randomBytes(64).toString("hex");
 
   const token = jwt.sign(data, secretKey, { expiresIn: "1h" });
 

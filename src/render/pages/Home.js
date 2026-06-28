@@ -17,6 +17,9 @@ export function Home() {
   const [value, setvalue] = useState("");
   const [loading, setloading] = useState(false);
   const [open, setOpen] = useState(false);
+  // "Recuérdame": guarda el user en localStorage para que al reiniciar
+  // solo pida la contraseña (no el nombre). La contraseña NUNCA se guarda en localStorage.
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(async () => {
     if (false) {
@@ -103,10 +106,6 @@ export function Home() {
                   justifyContent: "center",
                   background: "#1c1d22",
                   borderRadius: "10px",
-                  // position: "absolute",
-                  // top: "50%",
-                  // left: "50%",
-                  // transform: "translate(-50%, -50%)",
                 }}
               >
                 <input
@@ -129,22 +128,6 @@ export function Home() {
                     marginBottom: "20px",
                   }}
                 />
-                <div>
-                  <Checkbox
-                    defaultChecked
-                    color="success"
-                    sx={{
-                      color: '"rgba(44, 218, 157, 1)"',
-                      "&.Mui-checked": {
-                        color: "rgba(44, 218, 157, 1)",
-                      },
-                      "&.Mui-disabled": {
-                        color: "grey",
-                      },
-                    }}
-                  />
-                  <span>Recuerdame</span>
-                </div>
 
                 {loading ? (
                   <div
@@ -216,6 +199,11 @@ export function Home() {
               } else {
                 dispatch(setUser(res.data));
                 dispatch(setMasterPassword(values.password));
+                // Si "Recuérdame" está desmarcado, eliminar el user de localStorage
+                // para que al reiniciar pida usuario + contraseña completos
+                if (!rememberMe) {
+                  localStorage.removeItem("user");
+                }
                 toast.success("logeado");
                 navigate("/page-password");
               }
@@ -271,9 +259,11 @@ export function Home() {
                     marginBottom: "20px",
                   }}
                 />
+
                 <div>
                   <Checkbox
-                    defaultChecked
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     color="success"
                     sx={{
                       color: '"rgba(44, 218, 157, 1)"',
@@ -285,7 +275,7 @@ export function Home() {
                       },
                     }}
                   />
-                  <span>Recuerdame</span>
+                  <span>Recuérdame</span>
                 </div>
 
                 {loading ? (

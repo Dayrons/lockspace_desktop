@@ -4,11 +4,13 @@ import { Formik } from "formik";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
-import { setUser } from "../context/slice/UserSlice";
+import { setUser, setMasterPassword } from "../context/slice/UserSlice";
 import { useNavigate } from "react-router-dom";
 function SignupPage() {
   const [loading, setloading] = useState(false);
-  const [sesionActive, setSesionActive] = useState(true);
+  // "Recuérdame": guarda el user en localStorage para que al reiniciar
+  // solo pida la contraseña (no el nombre). La contraseña NUNCA se guarda en localStorage.
+  const [rememberMe, setRememberMe] = useState(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   return (
@@ -35,6 +37,11 @@ function SignupPage() {
               toast.error("Hubo un error al registrar el Usuario");
             } else {
               dispatch(setUser(res.data));
+              dispatch(setMasterPassword(values.password));
+              // Si "Recuérdame" está desmarcado, eliminar el user de localStorage
+              if (!rememberMe) {
+                localStorage.removeItem("user");
+              }
               toast.success("Cuenta creada con exito");
               navigate("/page-password");
             }
@@ -108,6 +115,25 @@ function SignupPage() {
               }}
             />
 
+            <div>
+              <Checkbox
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                color="success"
+                sx={{
+                  marginLeft: 0,
+                  color: '"rgba(44, 218, 157, 1)"',
+                  "&.Mui-checked": {
+                    color: "rgba(44, 218, 157, 1)",
+                  },
+                  "&.Mui-disabled": {
+                    color: "grey",
+                  },
+                }}
+              />
+              <span>Recuérdame</span>
+            </div>
+
             {loading ? (
               <div
                 style={{
@@ -142,26 +168,6 @@ function SignupPage() {
                 Comenzar
               </button>
             )}
-
-            <div>
-              <Checkbox
-                checked={sesionActive}
-                onChange={(e) => setSesionActive(e.target.checked)}
-                color="success"
-                sx={{
-                  marginLeft: 0,
-                  // paddingLeft:0,
-                  color: '"rgba(44, 218, 157, 1)"',
-                  "&.Mui-checked": {
-                    color: "rgba(44, 218, 157, 1)",
-                  },
-                  "&.Mui-disabled": {
-                    color: "grey",
-                  },
-                }}
-              />
-              <span>Recuerdame</span>
-            </div>
           </form>
         )}
       </Formik>

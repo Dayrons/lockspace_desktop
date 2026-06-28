@@ -12,6 +12,10 @@ export const userSlice = createSlice({
       state.user = action.payload;
       localStorage.setItem("user", JSON.stringify(action.payload));
     },
+    clearUser: (state) => {
+      state.user = null;
+      localStorage.removeItem("user");
+    },
     setMasterPassword: (state, action) => {
       state.masterPassword = action.payload;
     },
@@ -21,7 +25,7 @@ export const userSlice = createSlice({
   },
 });
 
-export const { setUser, setMasterPassword, clearMasterPassword } =
+export const { setUser, clearUser, setMasterPassword, clearMasterPassword } =
   userSlice.actions;
 
 export default userSlice.reducer;
