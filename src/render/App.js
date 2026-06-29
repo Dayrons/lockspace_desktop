@@ -33,9 +33,9 @@ function GlobalSyncBanner({ visible }) {
   return (
     <div
       style={{
-        position: "fixed",
-        top: "8px",
-        right: "8px",
+        position: "absolute",
+        top: 0,
+        right: 0,
         background: "rgba(44, 218, 157, 0.9)",
         padding: "6px 10px",
         borderRadius: "8px 0 0 8px",
@@ -75,8 +75,8 @@ function App() {
 
   return (
     <HashRouter>
-      <GlobalSyncBanner visible={clientConnected} />
-      <div style={{ height: "100vh" }}>
+      <div style={{ position: "relative", height: "100vh" }}>
+        <GlobalSyncBanner visible={clientConnected} />
         <Routes>
           <Route path="/" element={<RootRoute />} />
           <Route path="/signup" element={<SignupPage/>} />
