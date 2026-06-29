@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { setUser, setMasterPassword } from "../context/slice/UserSlice";
 import { useNavigate } from "react-router-dom";
 import { CircularProgress } from "@mui/material";
+import logo from "../../assets/logo.png";
 
 /**
  * Pantalla de desbloqueo: se muestra cuando la app inicia y hay un usuario
@@ -69,6 +70,7 @@ export function UnlockPage() {
           gap: "20px",
         }}
       >
+        <img src={logo} alt="LockSpace" style={{ width: 100, height: 100 }} />
         <h1 style={{ color: "white", margin: 0 }}>
           Hola, {user?.name || "Usuario"}
         </h1>
