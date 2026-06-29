@@ -5,6 +5,7 @@ import { IoQrCode } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { clearPasswords } from '../context/slice/AppSlice';
 import { clearMasterPassword, clearUser } from '../context/slice/UserSlice';
+import { setClientConnected } from '../context/slice/FtpSlice';
 export function MenuItems() {
 
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export function MenuItems() {
         dispatch(clearPasswords())
         dispatch(clearMasterPassword())
         dispatch(clearUser())
+        dispatch(setClientConnected(false))
         navigate('/')
       }
     },

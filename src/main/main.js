@@ -3,7 +3,6 @@ const { BrowserWindow, ipcMain, dialog, Menu, Tray, nativeImage, app } = require
 const { networkInterfaces } = require("os");
 const path = require("path");
 const fs = require("fs");
-const FtpSrv = require("ftp-srv");
 var jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const PasswordController = require("./controllers/PasswordController");
@@ -11,6 +10,7 @@ const AuthController = require("./controllers/AuthController");
 const fernet = require("fernet");
 const { Password } = require("./models/Password");
 const { User } = require("./models/User");
+const wsServer = require("./wsServer");
 let window;
 let tray;
 
@@ -110,12 +110,22 @@ ipcMain.handle("signup", AuthController.signup);
 // ipcMain.handle('start-server', initFtpServer)
 
 ipcMain.handle("delete-password", PasswordController.delete);
-ipcMain.handle("create-password", PasswordController.create);
+ipcMain.handle("create-password", async (e, values) => {
+  const result = await PasswordController.create(e, values);
+  // Notificar a Flutter via WebSocket si está conectado
+  try {
+    const res = JSON.parse(result);
+    if (!res.error && res.data) {
+      wsServer.notifyPasswordCreated(res.data);
+    }
+  } catch (_) {}
+  return result;
+});
 ipcMain.handle("get-password", PasswordController.get);
 ipcMain.handle("search-password", PasswordController.search);
 ipcMain.handle("decrypt-password", PasswordController.decryptPassword);
 
-ipcMain.on("start-server", initFtpServer);
+ipcMain.on("start-server", startServer);
 
 ipcMain.handle("get-file", getFile);
 
@@ -123,104 +133,34 @@ ipcMain.handle("validate-file-password", registerPassword);
 
 function getHostname(e, _) {
   const nets = networkInterfaces();
-  const host = Object.create(null);
-
   let ip;
 
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
       const familyV4Value = typeof net.family === "string" ? "IPv4" : 4;
-
       if (net.family === familyV4Value && !net.internal) {
-        if (!host[name]) {
-          host[name] = [];
-        }
-
         ip = net.address;
         macAddress = net.mac;
-
-        // host[name].push(net.address);
       }
     }
   }
 
-  // const key = CryptoJS.enc.Utf8.parse("secretkey:hapilyeverafter1234567");
+  // Guardar macAddress en wsServer para auth
+  wsServer.setMacAddress(macAddress);
 
-  // // El problema es que el iv es diferente en flutter crea encriptado diferente
-  // const iv = CryptoJS.lib.WordArray.random(16);
-
-  // const userEncrypt = CryptoJS.AES.encrypt(macAddress, key, { iv: iv });
-  // const decrypted = CryptoJS.AES.decrypt(userEncrypt, key, { iv: iv });
-
-  // console.log(decrypted.toString(CryptoJS.enc.Utf8));
-  // console.log(userEncrypt.toString());
-
-  const data = {
-    username: macAddress,
-    password: uuid,
-    host: ip,
-  };
-
-  // JWT secret generado aleatoriamente al iniciar la app.
-  // Cambia con cada inicio, así que tokens viejos no son válidos.
-  // Esto evita que alguien con acceso al código pueda falsificar QR.
-  const secretKey = crypto.randomBytes(64).toString("hex");
-
-  const token = jwt.sign(data, secretKey, { expiresIn: "1h" });
-
+  // Generar JWT con info del WS server (no FTP)
+  const token = wsServer.generateQrToken(ip);
   return token;
 }
 
-function initFtpServer(e, _) {
-  const port = 2121;
-  logToFile("Attempting to start FTP server on port " + port);
-
-  try {
-    const ftpServer = new FtpSrv({
-      url: "ftp://0.0.0.0:" + port,
-      pasv_url: "127.0.0.1",
-      pasv_min: 8881,
-      whitelist: ["STOR", "USER", "PASS", "TYPE", "RETR", "PASV", "QUIT"],
-      anonymous: true,
-    });
-
-    ftpServer.on(
-      "login",
-      ({ connection, username, password }, resolve, reject) => {
-        connection.on("STOR", async (error, file) => {
-          window.webContents.send("redirect");
-        });
-
-        if (username === macAddress && password === uuid) {
-          return resolve({ root: root });
-        }
-        return reject(
-          new Error("Invalid username or password")
-        );
-      }
-    );
-
-    ftpServer.on("client-error", ({ context, error }) => {
-      const errorMsg = `FTP client error: ${context} ${error.message}`;
-      console.error(errorMsg);
-      logToFile(errorMsg);
-    });
-
-    ftpServer.on("disconnect", async ({ connection, id, newConnectionCount }) => {
-      console.log("Cliente desconectado");
-      await ftpServer.close();
-    });
-
-    ftpServer.listen().then(() => {
-      const msg = "Ftp server is starting...";
-      console.log(msg);
-      logToFile(msg);
-    }).catch(err => {
-      logToFile(`FTP server listen error: ${err.message}`);
-    });
-  } catch (error) {
-    logToFile(`FTP server setup error: ${error.message}`);
-  }
+function startServer(e, _) {
+  // Iniciar WebSocket server en vez de FTP
+  wsServer.startWsServer(window, logToFile, (user) => {
+    // Cuando Flutter se autentica por WS, actualizar globalUser en main.js
+    globalUser = user;
+    wsServer.setGlobalUser(user);
+    logToFile(`main.js: globalUser sincronizado desde WS: ${user.name}`);
+  });
 }
 
 async function registerPassword(e, values) {
@@ -236,40 +176,36 @@ async function registerPassword(e, values) {
     logToFile(`validatePassword: ${validatePassword}`);
 
     if (validatePassword) {
-      // Las contraseñas vienen encriptadas desde Flutter con PBKDF2(password, username)
-      // No necesitan ser desencriptadas ni re-encriptadas, solo almacenarlas tal cual.
-      
-      const passwords = dataResponse.passwords;
-      const newPasswords = [];
-
-      for (let i = 0; i < passwords.length; i++) {
-        const password = passwords[i];
+      // Con WebSocket, los passwords del Flutter ya se procesaron en handleSyncRequest.
+      // Aquí solo validamos la contraseña y confirmamos éxito.
+      // Enviar todos los passwords del desktop al Flutter via WS para que sincronice
+      const passwords = await Password.findAll({
+        where: { UserId: globalUser.id },
+      });
+      const data = passwords.map((p) => {
+        let createdAt = null;
+        let updatedAt = null;
         try {
-          const newPassword = {
-            uuid: password.uuid,
-            title: password.title,
-            password: password.password,
-            expiration: password.expiration || 0,
-            expirationUnit: password.expiration_unit || 'never',
-            UserId: globalUser.id,
-            externalId: password.id,
-          };
-          // Solo incluir fechas si son válidas
-          if (password.created_at) {
-            newPassword.createdAt = new Date(password.created_at);
-          }
-          if (password.updated_at) {
-            newPassword.updatedAt = new Date(password.updated_at);
-          }
-          newPasswords.push(newPassword);
-        } catch (error) {
-          logToFile(`Error processing password "${password.title}": ${error.message}`);
-        }
-      }
+          if (p.createdAt) createdAt = new Date(p.createdAt).toISOString();
+        } catch (_) {}
+        try {
+          if (p.updatedAt) updatedAt = new Date(p.updatedAt).toISOString();
+        } catch (_) {}
+        return {
+          uuid: p.uuid,
+          title: p.title,
+          password: p.password,
+          expiration: p.expiration,
+          expiration_unit: p.expirationUnit,
+          created_at: createdAt,
+          updated_at: updatedAt,
+        };
+      });
+      wsServer.sendToClient({ type: "sync_response", passwords: data });
+      logToFile(`registerPassword: enviados ${data.length} passwords al Flutter via WS`);
 
-      if (newPasswords.length > 0) {
-        await Password.bulkCreate(newPasswords, { ignoreDuplicates: true });
-      }
+      // Notificar al renderer para refrescar la lista
+      window.webContents.send("sync-completed", { created: 0, updated: 0 });
 
       return JSON.stringify({
         error: false,
@@ -285,6 +221,122 @@ async function registerPassword(e, values) {
   } catch (error) {
     logToFile(`registerPassword error: ${error.message}\nStack: ${error.stack}`);
     return JSON.stringify({ error: true, message: "Error interno" });
+  }
+}
+
+/**
+ * Escribe sync_down.json con todos los passwords del usuario actual.
+ * Flutter descargará este archivo para aplicar merge en su DB local.
+ */
+async function writeSyncDown() {
+  if (!globalUser) return;
+  try {
+    const passwords = await Password.findAll({
+      where: { UserId: globalUser.id },
+    });
+
+    // Formato compatible con Flutter (snake_case)
+    const data = passwords.map((p) => ({
+      uuid: p.uuid,
+      title: p.title,
+      password: p.password, // encriptada con Fernet, tal cual
+      expiration: p.expiration,
+      expiration_unit: p.expirationUnit,
+      created_at: p.createdAt ? p.createdAt.toISOString() : null,
+      updated_at: p.updatedAt ? p.updatedAt.toISOString() : null,
+    }));
+
+    const filePath = path.join(root, "sync_down.json");
+    fs.writeFileSync(filePath, JSON.stringify(data));
+    logToFile(`sync_down.json written with ${data.length} passwords`);
+  } catch (error) {
+    logToFile(`writeSyncDown error: ${error.message}`);
+  }
+}
+
+/**
+ * Procesa data.txt del FTP automáticamente (sync periódico).
+ * Aplica merge bidireccional sin pedir contraseña (ya hay globalUser).
+ * Luego escribe sync_down.json para que Flutter lo descargue.
+ */
+async function processSyncFile() {
+  try {
+    const file = path.join(root, "data.txt");
+    if (!fs.existsSync(file)) return;
+
+    const data = fs.readFileSync(file, "utf-8");
+    fs.unlinkSync(file); // Limpiar archivo
+    dataResponse = JSON.parse(data);
+
+    // Asegurar que el usuario existe localmente
+    const [user, _] = await User.findOrCreate({
+      where: { uuid: dataResponse.user.uuid },
+      defaults: {
+        name: dataResponse.user.name.toLowerCase(),
+        password: dataResponse.user.password,
+        uuid: dataResponse.user.uuid,
+      },
+    });
+    globalUser = user;
+    wsServer.setGlobalUser(user);
+
+    // Aplicar merge (misma lógica que registerPassword pero sin verificar contraseña)
+    const incomingPasswords = dataResponse.passwords;
+    const results = { created: 0, updated: 0, skipped: 0 };
+
+    for (const incoming of incomingPasswords) {
+      try {
+        const existing = await Password.findOne({
+          where: { uuid: incoming.uuid, UserId: globalUser.id },
+        });
+
+        if (!existing) {
+          await Password.create({
+            uuid: incoming.uuid,
+            title: incoming.title,
+            password: incoming.password,
+            expiration: incoming.expiration || 0,
+            expirationUnit: incoming.expiration_unit || "never",
+            UserId: globalUser.id,
+            createdAt: incoming.created_at ? new Date(incoming.created_at) : undefined,
+            updatedAt: incoming.updated_at ? new Date(incoming.updated_at) : undefined,
+          });
+          results.created++;
+        } else {
+          const localUpdated = new Date(existing.updatedAt).getTime();
+          const remoteUpdated = incoming.updated_at
+            ? new Date(incoming.updated_at).getTime()
+            : 0;
+
+          if (remoteUpdated > localUpdated) {
+            await existing.update({
+              title: incoming.title,
+              password: incoming.password,
+              expiration: incoming.expiration || 0,
+              expirationUnit: incoming.expiration_unit || "never",
+              updatedAt: new Date(incoming.updated_at),
+            });
+            results.updated++;
+          } else {
+            results.skipped++;
+          }
+        }
+      } catch (error) {
+        logToFile(`processSyncFile: error merging uuid=${incoming.uuid}: ${error.message}`);
+      }
+    }
+
+    // Escribir sync_down.json
+    await writeSyncDown();
+
+    // Notificar al renderer que hubo cambios (para refrescar la lista)
+    if (results.created > 0 || results.updated > 0) {
+      window.webContents.send("sync-completed", results);
+    }
+
+    logToFile(`processSyncFile: ${results.created} created, ${results.updated} updated, ${results.skipped} skipped`);
+  } catch (error) {
+    logToFile(`processSyncFile error: ${error.message}`);
   }
 }
 
@@ -305,12 +357,12 @@ async function getFile(e, _) {
         defaults: {
           name: dataResponse.user.name.toLowerCase(),
           password: dataResponse.user.password,
-          externalId: dataResponse.user.id,
           uuid: dataResponse.user.uuid,
         },
       });
 
       globalUser = user;
+      wsServer.setGlobalUser(user);
       window.webContents.send("show-modal-password");
 
       return {

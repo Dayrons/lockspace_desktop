@@ -57,8 +57,16 @@ export function ListPassword() {
       }
     }
     window.addEventListener("mousemove", handleMouseMove);
-    getData()
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    getData();
+
+    // Refrescar lista cuando el sync automático trae cambios
+    const onSyncCompleted = () => getData();
+    ipcRenderer.on("sync-completed", onSyncCompleted);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      ipcRenderer.removeListener("sync-completed", onSyncCompleted);
+    };
   }, []);
 
 

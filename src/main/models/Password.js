@@ -4,10 +4,6 @@ const { create } = require("html-pdf");
 
 
 const Password = sequelize.define("Password", {
-  externalId: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-  },
    uuid:{
       type: DataTypes.CHAR,
       allowNull: false,

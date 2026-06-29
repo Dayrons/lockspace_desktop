@@ -14,11 +14,6 @@ const User = sequelize.define(
       type: DataTypes.CHAR,
       allowNull: false,
       unique: true,
-      
-    },
-      externalId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
     },
     password: {
       type: DataTypes.TEXT,
