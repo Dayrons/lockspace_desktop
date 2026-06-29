@@ -75,8 +75,8 @@ function App() {
 
   return (
     <HashRouter>
+      <GlobalSyncBanner visible={clientConnected} />
       <div style={{ height: "100vh" }}>
-        <GlobalSyncBanner visible={clientConnected} />
         <Routes>
           <Route path="/" element={<RootRoute />} />
           <Route path="/signup" element={<SignupPage/>} />
