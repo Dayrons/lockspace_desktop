@@ -33,20 +33,22 @@ function GlobalSyncBanner({ visible }) {
   return (
     <div
       style={{
-        width: "100%",
-        background: "rgba(44, 218, 157, 0.12)",
-        borderBottom: "1px solid rgba(44, 218, 157, 0.25)",
-        padding: "6px 0",
+        position: "fixed",
+        top: "8px",
+        right: "8px",
+        background: "rgba(44, 218, 157, 0.9)",
+        padding: "6px 10px",
+        borderRadius: "8px 0 0 8px",
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        gap: "6px",
+        gap: "5px",
         cursor: "pointer",
-        flexShrink: 0,
+        zIndex: 9999,
+        boxShadow: "0 2px 8px rgba(44, 218, 157, 0.3)",
       }}
       title="App LockSpace conectada - click para desconectar"
     >
-      <span style={{ color: "rgba(44, 218, 157, 1)", fontSize: "12px", fontWeight: "bold" }}>
+      <span style={{ color: "#1c1d22", fontSize: "11px", fontWeight: "bold" }}>
         ● App conectada
       </span>
     </div>
@@ -73,16 +75,14 @@ function App() {
 
   return (
     <HashRouter>
-      <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      <div style={{ height: "100vh" }}>
         <GlobalSyncBanner visible={clientConnected} />
-        <div style={{ flex: 1, overflow: "auto" }}>
-          <Routes>
-            <Route path="/" element={<RootRoute />} />
-            <Route path="/signup" element={<SignupPage/>} />
-            <Route path="/page-password" element={<PagePassword/>} />
-            <Route path="/register-password" element={<RegisterPassword/>} />
-          </Routes>
-        </div>
+        <Routes>
+          <Route path="/" element={<RootRoute />} />
+          <Route path="/signup" element={<SignupPage/>} />
+          <Route path="/page-password" element={<PagePassword/>} />
+          <Route path="/register-password" element={<RegisterPassword/>} />
+        </Routes>
       </div>
     </HashRouter>
   )
